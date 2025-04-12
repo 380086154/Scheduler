@@ -1,4 +1,6 @@
-﻿using System.ServiceProcess;
+﻿using System;
+using System.IO;
+using System.ServiceProcess;
 
 namespace ARchGL.Platform.SessionService
 {
@@ -13,12 +15,20 @@ namespace ARchGL.Platform.SessionService
             var service = new SessionService();
             service.SendGogsCommitRecord();
 #endif
-            
-            var servicesToRun = new ServiceBase[]
+            try
             {
+                var servicesToRun = new ServiceBase[]
+                {
                 new SessionService()
-            };
-            ServiceBase.Run(servicesToRun);
+                };
+                ServiceBase.Run(servicesToRun);
+            }
+            catch (Exception ex)
+            {
+                var path = AppDomain.CurrentDomain.BaseDirectory;
+
+                File.WriteAllText("C:\\service_crash.log", path + "\r\n" + ex.ToString());
+            }
         }
     }
 }

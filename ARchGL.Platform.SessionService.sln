@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARchGL.Platform.LockScreen", "ARchGL.Platform.LockScreen\ARchGL.Platform.LockScreen.csproj", "{57B8E312-63EB-4CB9-86DF-2E4E048152A8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARchGL.Platform.SessionService", "ARchGL.Platform.SessionService\ARchGL.Platform.SessionService.csproj", "{D3AFA358-7118-467E-AA9C-B947397EFEFB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{57B8E312-63EB-4CB9-86DF-2E4E048152A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57B8E312-63EB-4CB9-86DF-2E4E048152A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57B8E312-63EB-4CB9-86DF-2E4E048152A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57B8E312-63EB-4CB9-86DF-2E4E048152A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3AFA358-7118-467E-AA9C-B947397EFEFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3AFA358-7118-467E-AA9C-B947397EFEFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3AFA358-7118-467E-AA9C-B947397EFEFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3AFA358-7118-467E-AA9C-B947397EFEFB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2ED116FA-E8B8-4ECA-85C6-9DE56A2274DD}
+	EndGlobalSection
+EndGlobal

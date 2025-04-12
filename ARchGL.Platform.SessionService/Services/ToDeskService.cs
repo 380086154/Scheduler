@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
-namespace ARchGL.Platform.SessionService.Utils
+namespace ARchGL.Platform.SessionService.Services
 {
     /// <summary>
     /// 通过检查 ToDesk 日志是否存在并且，并且最近5分钟内是否有更新，来判断是否正在远程

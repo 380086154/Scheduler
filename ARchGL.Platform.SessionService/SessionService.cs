@@ -221,7 +221,7 @@ namespace ARchGL.Platform.SessionService
                 {
                     try
                     {
-                        using (var result = await _httpClient.PostAsync(loginUrl, new FormUrlEncodedContent(param)))
+                        using (var result = await _httpClient.PostAsync(loginUrl, new FormUrlEncodedContent(param))) 
                         {
                             // 登录后获取热力图
                             using (var c = result.Content)

@@ -227,11 +227,7 @@ namespace ARchGL.Platform.SessionService
                             using (var c = result.Content)
                             {
                                 var html = await c.ReadAsStringAsync();
-                                //var chart = RegexHelper.Instance.GetValueByRegex("data-heatmap-data=\"(.*?)\"", html).Replace("&#34;", "\"");
-
                                 var time = RegexHelper.Instance.GetValueByRegex("span class=\"time-since\" title=\"(.*?)\"", html);
-
-                                //var sontributions = JsonConvert.DeserializeObject<List<ContributionDto>>(times);
                                 var latestDateTime = DateTimeHelper.CstToDateTime(time);
 
                                 // 从热力图中找到最后一天的数据

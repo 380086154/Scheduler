@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ARchGL.Platform.SessionService.Dtos
+namespace ARchGL.Platform.SessionService.Services.Dtos
 {
     public class ContributionDto
     {

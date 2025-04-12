@@ -5,7 +5,7 @@ namespace ARchGL.Platform.SessionService.Utils
 {
     public static class DateTimeHelper
     {
-        public static DateTime asdfasdf(string str)
+        public static DateTime CstToDateTime(string str)
         {
             //string dateString = "Fri, 11 Apr 2025 11:26:52 CST";
             var format = "ddd, dd MMM yyyy HH:mm:ss 'CST'";

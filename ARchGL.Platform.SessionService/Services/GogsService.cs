@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ARchGL.Platform.SessionService.Utils
+namespace ARchGL.Platform.SessionService.Services
 {
     public class GogsService
     {

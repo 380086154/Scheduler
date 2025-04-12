@@ -1,4 +1,5 @@
-﻿using ARchGL.Platform.SessionService.Dtos;
+﻿using ARchGL.Platform.SessionService.Services;
+using ARchGL.Platform.SessionService.Services.Dtos;
 using ARchGL.Platform.SessionService.Utils;
 using Newtonsoft.Json;
 using System;
@@ -231,7 +232,7 @@ namespace ARchGL.Platform.SessionService
                                 var time = RegexHelper.Instance.GetValueByRegex("span class=\"time-since\" title=\"(.*?)\"", html);
 
                                 //var sontributions = JsonConvert.DeserializeObject<List<ContributionDto>>(times);
-                                var latestDateTime = DateTimeHelper.asdfasdf(time);
+                                var latestDateTime = DateTimeHelper.CstToDateTime(time);
 
                                 // 从热力图中找到最后一天的数据
                                 dict["date"] = latestDateTime;

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace ARchGL.Platform.SessionService
+namespace ARchGL.Platform.SessionService.Services
 {
     /// <summary>
     /// 系统运行状态领域类

@@ -18,6 +18,7 @@ namespace ARchGL.Platform.SessionService
 
         // public const string host = "http://140.210.199.174:3002"; // 梁开生产环境
 
-        public const string host = "https://lk.spdio.com"; // 梁开测试环境
+        //public const string host = "https://lk.spdio.com"; // 梁开测试环境
+        public const string host = "https://station.tongmantech.com"; // 在线检测平台
     }
 }

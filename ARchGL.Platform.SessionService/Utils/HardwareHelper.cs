@@ -63,6 +63,22 @@ namespace ARchGL.Platform.SessionService
         {
             try
             {
+                using (var moc = GetManagementObjectCollection("Win32_NetworkAdapter"))
+                {
+                    foreach (ManagementObject mo in moc)
+                    {
+                        // 只获取物理网卡，排除虚拟网卡
+                        if (mo["PhysicalAdapter"] != null && (bool)mo["PhysicalAdapter"] == true)
+                        {
+                            var macAddress = mo["MACAddress"]?.ToString();
+                            if (!string.IsNullOrEmpty(macAddress))
+                            {
+                                return macAddress;
+                            }
+                        }
+                    }
+                }
+
                 using (var moc = GetManagementObjectCollection("Win32_NetworkAdapterConfiguration"))
                 {
                     foreach (ManagementObject mo in moc)

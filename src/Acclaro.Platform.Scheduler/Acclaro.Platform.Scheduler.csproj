@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<!-- WebApiClientCore 2.1.6 的 ActionInvoker 仍依赖反射，Native AOT 会启动失败 -->
+		<PublishAot>false</PublishAot>
+		<InvariantGlobalization>true</InvariantGlobalization>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.10" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.10" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.10" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Acclaro.Platform.Application\Acclaro.Platform.Application.csproj" />
+		<ProjectReference Include="..\Acclaro.Platform.Common\Acclaro.Platform.Common.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="appsettings*.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+		</None>
+	</ItemGroup>
+
+</Project>

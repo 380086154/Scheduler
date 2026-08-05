@@ -21,6 +21,11 @@ TestResults
 *.user
 *.sln.docstates
 
+# Local secrets (Teams Webhook URL etc.)
+**/appsettings.Local.json
+**/appsettings.*.local.json
+!**/appsettings.Local.json.example
+
 # Build results
 [Dd]ebug/
 [Rr]elease/

@@ -36,7 +36,6 @@ public class SessionBackgroundService(
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            logger.LogInformation("SessionBackgroundService 轮询");
             await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
 
             var date = DateTime.Now;

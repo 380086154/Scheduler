@@ -10,6 +10,12 @@ namespace Acclaro.Platform.Application.Services;
 /// </summary>
 public sealed class SessionPresenceService
 {
+    /// <summary>满此时长后视为今日已确认在公司，可降低落盘频率。</summary>
+    private static readonly TimeSpan ConfirmedAtOfficeThreshold = TimeSpan.FromHours(1);
+
+    /// <summary>确认在公司后的落盘间隔时间，单位分钟</summary>
+    private static readonly TimeSpan PersistIntervalWhenConfirmed = TimeSpan.FromMinutes(10);
+
     private readonly string _presenceFile;
     private readonly object _sync = new();
 
@@ -17,6 +23,7 @@ public sealed class SessionPresenceService
     private TimeSpan _todayAtOfficeDuration;
     private DateTime? _lastSampleUtc;
     private bool _lastAtOffice;
+    private DateTime? _lastPersistUtc;
 
     public SessionPresenceService()
     {
@@ -57,13 +64,18 @@ public sealed class SessionPresenceService
 
         lock (_sync)
         {
+            var forcePersist = false;
             if (_date != today)
             {
                 _date = today;
                 _todayAtOfficeDuration = TimeSpan.Zero;
                 _lastSampleUtc = null;
                 _lastAtOffice = false;
+                _lastPersistUtc = null;
+                forcePersist = true;
             }
+
+            var wasConfirmed = _todayAtOfficeDuration >= ConfirmedAtOfficeThreshold;
 
             if (_lastSampleUtc is DateTime last && _lastAtOffice)
             {
@@ -74,7 +86,12 @@ public sealed class SessionPresenceService
 
             _lastSampleUtc = utcNow;
             _lastAtOffice = atOffice;
-            SaveUnlocked();
+
+            // 刚跨过 1 小时阈值时立刻落盘一次，之后放缓
+            if (!wasConfirmed && _todayAtOfficeDuration >= ConfirmedAtOfficeThreshold)
+                forcePersist = true;
+
+            PersistIfNeeded(utcNow, forcePersist);
         }
     }
 
@@ -102,11 +119,24 @@ public sealed class SessionPresenceService
         }
     }
 
-    private void SaveUnlocked()
+    private void PersistIfNeeded(DateTime utcNow, bool force)
     {
+        if (!force)
+        {
+            if (_todayAtOfficeDuration >= ConfirmedAtOfficeThreshold
+                && _lastPersistUtc is DateTime last
+                && utcNow - last < PersistIntervalWhenConfirmed)
+            {
+                return;
+            }
+        }
+
         try
         {
-            File.WriteAllText(_presenceFile, $"{_date:yyyy-MM-dd}{Environment.NewLine}{_todayAtOfficeDuration.TotalSeconds:F0}{Environment.NewLine}");
+            File.WriteAllText(
+                _presenceFile,
+                $"{_date:yyyy-MM-dd}{Environment.NewLine}{_todayAtOfficeDuration.TotalSeconds:F0}{Environment.NewLine}");
+            _lastPersistUtc = utcNow;
         }
         catch
         {

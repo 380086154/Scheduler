@@ -1,6 +1,7 @@
-﻿using System.ComponentModel;
-using Acclaro.Platform.Application.Apis.Holiday;
+﻿using Acclaro.Platform.Application.Apis.Holiday;
 using Acclaro.Platform.Application.Apis.Teams;
+using Acclaro.Platform.Application.Apis.WeCom;
+using Acclaro.Platform.Application.Notifications;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WebApiClientCore;
@@ -12,13 +13,25 @@ public static class ApiServiceCollectionExtensions
     /// <summary>
     /// 注册 HTTP 接口
     /// </summary>
-    /// <param name="services"></param>
-    /// <returns></returns>
     public static IServiceCollection AddHttpApis(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddWebApiClient().UseSourceGeneratorHttpApiActivator();
         services.AddPlatformHttpApi<IHolidayApi>("https://timor.tech/");
-        services.AddPlatformHttpApi<IWorkflowsApi>(configuration["Notifications:TeamsWebhookUrl"]);
+
+        var provider = configuration.GetValue("Notifications:Provider", NotificationProvider.Teams);
+        switch (provider)
+        {
+            case NotificationProvider.WeCom:
+                services.AddPlatformHttpApi<IWeComApi>("https://qyapi.weixin.qq.com/");
+                break;
+            case NotificationProvider.DingTalk:
+                // 发送尚未实现，不注册 API
+                break;
+            default:
+                services.AddPlatformHttpApi<IWorkflowsApi>(configuration["Notifications:TeamsWebhookUrl"]);
+                break;
+        }
+
         return services;
     }
 
@@ -54,7 +67,7 @@ public static class ApiServiceCollectionExtensions
     private static HttpApiOptions DisableLogging(this HttpApiOptions o)
     {
 #if !DEBUG
-            o.UseLogging = false;
+        o.UseLogging = false;
 #endif
         return o;
     }

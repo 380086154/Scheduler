@@ -4,6 +4,17 @@ public sealed class NotificationOptions
 {
     public const string SectionName = "Notifications";
 
+    /// <summary>通知渠道：Teams / WeCom / DingTalk（三选一）。</summary>
+    public NotificationProvider Provider { get; set; } = NotificationProvider.Teams;
+
+    public string? TeamsWebhookUrl { get; set; }
+
+    /// <summary>企业微信群机器人完整 Webhook，含 key。</summary>
+    public string? WeComWebhookUrl { get; set; }
+
+    /// <summary>钉钉群机器人完整 Webhook（尚未实现发送）。</summary>
+    public string? DingTalkWebhookUrl { get; set; }
+
     public List<NotificationRuleOptions> Rules { get; set; } = [];
 }
 

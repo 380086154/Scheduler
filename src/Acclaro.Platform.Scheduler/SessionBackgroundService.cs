@@ -83,7 +83,7 @@ public class SessionBackgroundService(
             // 跨天执行
             if (day != 0 && day != date.Day)
             {
-                logger.LogInformation("跨天：重新初始化节假日数据");
+                // logger.LogInformation("跨天：尝试获取新的节假日数据");
                 await holidayService.InitializeAsync(true);
             }
 

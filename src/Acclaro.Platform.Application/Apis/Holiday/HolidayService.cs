@@ -1,27 +1,57 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Acclaro.Platform.Application.Apis.Holiday.Dtos;
 using Acclaro.Platform.Common.Common;
+using Microsoft.Extensions.Configuration;
 
 namespace Acclaro.Platform.Application.Apis.Holiday;
 
+/// <summary>
+/// 节假日服务：加载/缓存全年数据，并提供工作日相关判断。
+/// 本地文件不存在时按 Timor → curl → 接口坞 顺序下载，最终统一落盘为 Timor 结构。
+/// </summary>
 public class HolidayService
 {
+    /// <summary>接口坞：工作日（含调休上班）</summary>
+    private const int ApiHubsWorkday = 1;
+
+    /// <summary>接口坞：非工作日</summary>
+    private const int ApiHubsNonWorkday = 2;
+
+    /// <summary>接口坞：非节假日</summary>
+    private const int ApiHubsHolidayNone = 10;
+
+    /// <summary>接口坞：法定节假日</summary>
+    private const int ApiHubsLegalYes = 1;
+
     private const string BrowserUserAgent =
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
     private readonly IHolidayApi _holidayApi;
+    private readonly IApiHubsHolidayApi _apiHubsHolidayApi;
+    private readonly string? _apiHubsApiKey;
     private readonly string _holidayDirectory;
-    private readonly ConcurrentDictionary<int, Dictionary<string, HolidayItem>> _cache = new(); // year -> (MM-dd -> item)
 
-    public HolidayService(IHolidayApi holidayApi)
+    /// <summary>year -> (MM-dd -> item)</summary>
+    private readonly ConcurrentDictionary<int, Dictionary<string, HolidayItem>> _cache = new();
+
+    public HolidayService(
+        IHolidayApi holidayApi,
+        IApiHubsHolidayApi apiHubsHolidayApi,
+        IConfiguration configuration)
     {
         _holidayApi = holidayApi;
+        _apiHubsHolidayApi = apiHubsHolidayApi;
+        _apiHubsApiKey = configuration["Holiday:ApiHubsApiKey"];
         _holidayDirectory = AppDataPaths.GetDirectory("holiday");
     }
 
+    /// <summary>
+    /// 确保当年节假日就绪；12 月时可顺带加载下一年。
+    /// </summary>
     public async Task InitializeAsync(bool nextYear = false)
     {
         var year = DateTime.Today.Year;
@@ -34,6 +64,9 @@ public class HolidayService
         }
     }
 
+    /// <summary>
+    /// 确保指定年份数据在内存缓存中：本地有文件则直接读，否则先下载再落盘。
+    /// </summary>
     public async Task EnsureHolidayLoadedAsync(int year)
     {
         if (_cache.ContainsKey(year)) return;
@@ -55,8 +88,8 @@ public class HolidayService
     }
 
     /// <summary>
-    /// 先走 WebApiClient；若被 Cloudflare 挑战，再回退到带浏览器 UA 的 curl.exe。
-    /// 裸 curl 无 -A 会得到 Just a moment...；加浏览器 UA 后通常为 200。
+    /// 下载全年 JSON：先 WebApiClient 调 Timor；失败或 Cloudflare 挑战后再 curl；
+    /// 仍失败则走接口坞，并转换为 Timor 格式。
     /// </summary>
     private async Task<string> DownloadYearJsonAsync(int year, CancellationToken cancellationToken = default)
     {
@@ -67,13 +100,129 @@ public class HolidayService
         }
         catch
         {
-            // fall through to curl
+            // 继续尝试 curl
         }
 
-        var url = $"https://timor.tech/api/holiday/year/{year}";
-        return await DownloadViaCurlAsync(url, cancellationToken);
+        try
+        {
+            var url = $"https://timor.tech/api/holiday/year/{year}";
+            var viaCurl = await DownloadViaCurlAsync(url, cancellationToken);
+            if (IsValidHolidayJson(viaCurl)) return viaCurl;
+        }
+        catch
+        {
+            // 继续尝试接口坞
+        }
+
+        return await DownloadViaApiHubsAsync(year, cancellationToken);
     }
 
+    /// <summary>从接口坞拉取全年日历并转换为 Timor year JSON。</summary>
+    private async Task<string> DownloadViaApiHubsAsync(int year, CancellationToken cancellationToken)
+    {
+        // 空 key 走匿名额度（约 5 次/天）；有 key 则按用户计费/限流
+        var apiKey = string.IsNullOrWhiteSpace(_apiHubsApiKey) ? null : _apiHubsApiKey.Trim();
+        var raw = await _apiHubsHolidayApi.GetAsync(
+            year,
+            size: 366,
+            cn: 1,
+            page: 1,
+            api_key: apiKey,
+            token: cancellationToken);
+
+        var api = JsonSerializer.Deserialize(raw, HolidayJsonContext.Default.ApiHubsResponse);
+        if (api?.Code != 0 || api.Data?.List is not { Count: > 0 } list)
+            throw new InvalidOperationException($"接口坞节假日数据无效 (year={year}).");
+
+        var timorJson = ConvertApiHubsToTimorJson(list);
+        if (!IsValidHolidayJson(timorJson))
+            throw new InvalidOperationException("接口坞数据转换后不是有效的节假日 JSON。");
+
+        return timorJson;
+    }
+
+    /// <summary>
+    /// 将接口坞按天列表转为 Timor 结构：只保留相对自然周的例外日
+    /// （周末补班、工作日放假），普通工作日/周末不写入 map。
+    /// </summary>
+    internal static string ConvertApiHubsToTimorJson(IEnumerable<ApiHubsHolidayDay> days)
+    {
+        var map = new Dictionary<string, HolidayItem>(StringComparer.Ordinal);
+
+        foreach (var day in days)
+        {
+            if (!TryParseYmd(day.Date, out var date)) continue;
+
+            var isWeekend = date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+            var isWorkday = day.Workday == ApiHubsWorkday;
+            var isRest = day.Workday == ApiHubsNonWorkday;
+
+            // 周末上班 → 补班（holiday=false）；工作日休息 → 放假（holiday=true）
+            if (isWorkday && isWeekend)
+            {
+                map[date.ToString("MM-dd")] = new HolidayItem
+                {
+                    Holiday = false,
+                    Name = ResolveMakeupName(day),
+                    Wage = 1,
+                    Date = date.ToString("yyyy-MM-dd")
+                };
+            }
+            else if (isRest && !isWeekend)
+            {
+                map[date.ToString("MM-dd")] = new HolidayItem
+                {
+                    Holiday = true,
+                    Name = ResolveHolidayName(day),
+                    Wage = day.HolidayLegal == ApiHubsLegalYes ? 3 : 2,
+                    Date = date.ToString("yyyy-MM-dd")
+                };
+            }
+        }
+
+        var response = new Response<Dictionary<string, HolidayItem>>
+        {
+            Code = 0,
+            Holiday = map
+        };
+
+        return JsonSerializer.Serialize(response, HolidayJsonContext.Default.ResponseDictionaryStringHolidayItem);
+    }
+
+    /// <summary>放假日显示名：优先接口中文节假日名。</summary>
+    private static string ResolveHolidayName(ApiHubsHolidayDay day)
+    {
+        if (!string.IsNullOrWhiteSpace(day.HolidayCn)
+            && day.Holiday != ApiHubsHolidayNone
+            && !day.HolidayCn.Contains("非节假日", StringComparison.Ordinal))
+            return day.HolidayCn!;
+
+        return "放假";
+    }
+
+    /// <summary>补班日显示名：优先调休中文说明。</summary>
+    private static string ResolveMakeupName(ApiHubsHolidayDay day)
+    {
+        if (!string.IsNullOrWhiteSpace(day.HolidayOvertimeCn)
+            && !day.HolidayOvertimeCn.Contains("非", StringComparison.Ordinal))
+            return day.HolidayOvertimeCn!;
+
+        return "调休";
+    }
+
+    private static bool TryParseYmd(int ymd, out DateTime date)
+    {
+        date = default;
+        var s = ymd.ToString(CultureInfo.InvariantCulture);
+        return DateTime.TryParseExact(
+            s,
+            "yyyyMMdd",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out date);
+    }
+
+    /// <summary>粗判是否为可用的 Timor 形节假日 JSON（排除 Cloudflare 挑战页）。</summary>
     private static bool IsValidHolidayJson(string? json)
     {
         if (string.IsNullOrWhiteSpace(json)) return false;
@@ -83,9 +232,12 @@ public class HolidayService
                && !trimmed.Contains("Just a moment", StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// 用带浏览器 UA 的 curl.exe 下载。裸 curl 无 -A 常被 Cloudflare 挑战；
+    /// 写入临时文件再按 UTF-8 读取，避免控制台管道编码导致中文乱码。
+    /// </summary>
     private static async Task<string> DownloadViaCurlAsync(string url, CancellationToken cancellationToken)
     {
-        // 写入临时文件再按 UTF-8 读取，避免控制台/管道编码导致中文乱码
         var tempFile = Path.Combine(Path.GetTempPath(), $"holiday-{Guid.NewGuid():N}.json");
         try
         {
@@ -133,7 +285,7 @@ public class HolidayService
         }
     }
 
-    /// <summary>指定日期是否工作日，true 是</summary>
+    /// <summary>指定日期是否工作日；true 表示需要上班。</summary>
     public async Task<bool> IsWorkDayAsync(DateTime date)
     {
         var year = date.Year;
@@ -148,11 +300,10 @@ public class HolidayService
         return IsNormalWeekday(date);
     }
 
-    /// <summary>获取指定日期之后的下一个工作日（不含当天）</summary>
+    /// <summary>获取指定日期之后的下一个工作日（不含当天）。跨年时会自动加载下一年数据。</summary>
     public async Task<DateTime> GetNextWorkDayAsync(DateTime date)
     {
         var next = date.Date.AddDays(1);
-        // 跨年时 EnsureHolidayLoadedAsync 会在 IsWorkDayAsync 里自动加载
         while (!await IsWorkDayAsync(next))
         {
             next = next.AddDays(1);
@@ -161,11 +312,11 @@ public class HolidayService
     }
 
     /// <summary>
-    /// 获取下一个工作日，并判断相对基准日期是否跨月
+    /// 获取下一个工作日，并判断相对基准日期是否跨月。
     /// </summary>
     /// <returns>
-    /// NextWorkDay: 下一个工作日
-    /// CrossMonth: 是否跨月（月份或年份不同）
+    /// nextWorkDay: 下一个工作日；
+    /// crossMonth: 是否跨月（月份或年份不同）。
     /// </returns>
     public async Task<(DateTime nextWorkDay, bool crossMonth)> GetNextWorkDayWithCrossMonthAsync(DateTime date)
     {
@@ -174,7 +325,7 @@ public class HolidayService
         return (nextWorkDay, crossMonth);
     }
 
-    /// <summary>是否为本周最后一个工作日（今天是工作日，且下一工作日跨周；周一为一周起点）</summary>
+    /// <summary>是否为本周最后一个工作日（今天是工作日，且下一工作日跨周；周一为一周起点）。</summary>
     public async Task<bool> IsLastWorkDayOfWeekAsync(DateTime date)
     {
         date = date.Date;
@@ -184,13 +335,14 @@ public class HolidayService
         return StartOfWeekMonday(next) != StartOfWeekMonday(date);
     }
 
+    /// <summary>以周一为起点的本周起始日。</summary>
     private static DateTime StartOfWeekMonday(DateTime date)
     {
         var diff = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
         return date.AddDays(-diff).Date;
     }
 
-    /// <summary>是否为本月最后一个工作日（今天是工作日，且下一工作日跨月）</summary>
+    /// <summary>是否为本月最后一个工作日（今天是工作日，且下一工作日跨月）。</summary>
     public async Task<bool> IsLastWorkDayOfMonthAsync(DateTime date)
     {
         date = date.Date;
@@ -199,7 +351,7 @@ public class HolidayService
         return crossMonth;
     }
 
-    /// <summary>指定日期是否工作日，true 是</summary>
+    /// <summary>无节假日数据时的兜底：周一到周五视为工作日。</summary>
     private static bool IsNormalWeekday(DateTime date)
         => date.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday);
 

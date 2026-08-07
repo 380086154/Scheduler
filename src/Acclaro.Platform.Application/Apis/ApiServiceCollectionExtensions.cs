@@ -17,6 +17,7 @@ public static class ApiServiceCollectionExtensions
     {
         services.AddWebApiClient().UseSourceGeneratorHttpApiActivator();
         services.AddPlatformHttpApi<IHolidayApi>("https://timor.tech/");
+        services.AddPlatformHttpApi<IApiHubsHolidayApi>("https://api.apihubs.cn/");
 
         var provider = configuration.GetValue("Notifications:Provider", NotificationProvider.Teams);
         switch (provider)

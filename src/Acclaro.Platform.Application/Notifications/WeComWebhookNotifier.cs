@@ -11,7 +11,7 @@ public sealed class WeComWebhookNotifier(IWeComApi weComApi, IOptions<Notificati
         var key = ExtractKey(options.Value.WeComWebhookUrl)
             ?? throw new InvalidOperationException("Notifications:WeComWebhookUrl 未配置或缺少 key。");
 
-        var content = NotificationText.Truncate(NotificationText.Combine(title, message), 2000);
+        var content = NotificationText.Truncate(NotificationText.Body(title, message), 2000);
         var json = $$"""
             {
               "msgtype": "text",

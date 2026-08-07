@@ -2,13 +2,11 @@ namespace Acclaro.Platform.Application.Notifications;
 
 internal static class NotificationText
 {
-    public static string Combine(string title, string message)
-    {
-        if (string.IsNullOrWhiteSpace(title)) return message;
-        if (string.IsNullOrWhiteSpace(message)) return title;
-        //return $"{title}\n{message}";
-        return message; // 不发送标题
-    }
+    /// <summary>
+    /// 实际发送正文：只用 message；为空时才回退 title（兼容未填 Message 的旧配置）。
+    /// </summary>
+    public static string Body(string title, string message)
+        => string.IsNullOrWhiteSpace(message) ? title : message;
 
     public static string JsonEncode(string value) => value
         .Replace("\\", "\\\\", StringComparison.Ordinal)

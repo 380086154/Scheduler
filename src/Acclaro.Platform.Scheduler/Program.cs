@@ -1,5 +1,6 @@
 ﻿using Acclaro.Platform.Application.Apis;
 using Acclaro.Platform.Application.Apis.Holiday;
+using Acclaro.Platform.Application.InputActivity;
 using Acclaro.Platform.Application.Notifications;
 using Acclaro.Platform.Application.Services;
 using Acclaro.Platform.Common.Common;
@@ -23,6 +24,7 @@ builder.Services.AddWindowsService();
 builder.Services.AddHttpApis(builder.Configuration);
 builder.Services.AddSingleton<HolidayService>();
 builder.Services.AddSingleton<SessionPresenceService>();
+builder.Services.AddInputActivity(builder.Configuration);
 builder.Services.AddNotifications(builder.Configuration);
 builder.Services.AddHostedService<SessionBackgroundService>();
 

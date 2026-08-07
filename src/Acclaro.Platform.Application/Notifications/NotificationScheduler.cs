@@ -1,4 +1,5 @@
 using Acclaro.Platform.Application.Apis.Holiday;
+using Acclaro.Platform.Application.InputActivity;
 using Acclaro.Platform.Application.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -9,6 +10,7 @@ public sealed class NotificationScheduler(
     IOptions<NotificationOptions> options,
     HolidayService holidayService,
     SessionPresenceService presenceService,
+    InputActivityService inputActivity,
     NotificationStateStore stateStore,
     INotifier notifier,
     ILogger<NotificationScheduler> logger)
@@ -34,7 +36,7 @@ public sealed class NotificationScheduler(
                 if (!presenceService.HasAtOfficeMinutes(rule.RequireAtOfficeMinutes)) continue;
 
                 var title = string.IsNullOrWhiteSpace(rule.Title) ? rule.Id : rule.Title;
-                var message = string.IsNullOrWhiteSpace(rule.Message) ? rule.Title : rule.Message;
+                var message = ResolveMessage(rule);
 
                 await notifier.NotifyAsync(title, message, cancellationToken);
                 stateStore.MarkSent(rule.Id, today);
@@ -45,6 +47,14 @@ public sealed class NotificationScheduler(
                 logger.LogError(ex, "发送通知失败 {RuleId}", rule.Id);
             }
         }
+    }
+
+    private string ResolveMessage(NotificationRuleOptions rule)
+    {
+        if (string.Equals(rule.Id, InputActivityOptions.DailyStatsRuleId, StringComparison.OrdinalIgnoreCase))
+            return inputActivity.GetTodaySnapshot().FormatNotificationBody();
+
+        return string.IsNullOrWhiteSpace(rule.Message) ? rule.Title : rule.Message;
     }
 
     /// <summary>

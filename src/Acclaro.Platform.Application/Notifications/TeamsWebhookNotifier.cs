@@ -9,7 +9,7 @@ public sealed class TeamsWebhookNotifier(IWorkflowsApi workflowsApi) : INotifier
 {
     public async Task NotifyAsync(string title, string message, CancellationToken token = default)
     {
-        var text = NotificationText.Combine(title, message);
+        var text = NotificationText.Body(title, message);
 
         var json = $$"""
             {

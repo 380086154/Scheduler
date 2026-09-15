@@ -1,5 +1,4 @@
 using System.Runtime.Versioning;
-using System.Text;
 using Acclaro.Platform.Common.Common;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -11,33 +10,26 @@ using SharpHook.Providers;
 namespace Acclaro.Platform.Application.InputActivity;
 
 /// <summary>
-/// 使用 SharpHook 统计今日键鼠次数；可选连续文本记录按键。
+/// 使用 SharpHook 统计今日键鼠次数（仅计数，不记录按键内容）。
 /// </summary>
 [SupportedOSPlatform("windows")]
 public sealed class InputActivityService : IHostedService, IDisposable
 {
-    private const char EnterSymbol = '↵';
-
     private readonly InputActivityOptions _options;
     private readonly ILogger<InputActivityService> _logger;
     private readonly string _statsFile;
-    private readonly string _keysDir;
     private readonly object _sync = new();
     private readonly HashSet<KeyCode> _keysDown = [];
-    private readonly HashSet<KeyCode> _emitCharFor = [];
-    private readonly StringBuilder _keyBuffer = new();
 
     private EventLoopGlobalHook? _hook;
     private Task? _hookTask;
 
     private DateOnly _date;
-    private DateTime _hourBucketLocal;
     private long _keyboard;
     private long _mouseLeft;
     private long _mouseRight;
     private long _mouseMiddle;
     private long _wheel;
-    private int _keyLineWidth;
     private DateTime _lastPersistUtc = DateTime.MinValue;
 
     public InputActivityService(
@@ -47,9 +39,7 @@ public sealed class InputActivityService : IHostedService, IDisposable
         _options = options.Value;
         _logger = logger;
         _statsFile = AppDataPaths.GetFile("input", "stats.txt");
-        _keysDir = Path.Combine(AppContext.BaseDirectory, "logs", "input");
         _date = DateOnly.FromDateTime(DateTime.Today);
-        _hourBucketLocal = FloorToHour(DateTime.Now);
         Load();
     }
 
@@ -86,17 +76,16 @@ public sealed class InputActivityService : IHostedService, IDisposable
 
         try
         {
-            UioHookProvider.Instance.KeyTypedEnabled = _options.RecordKeyValues;
+            UioHookProvider.Instance.KeyTypedEnabled = false;
 
             _hook = new EventLoopGlobalHook(runAsyncOnBackgroundThread: true);
             _hook.KeyPressed += OnKeyPressed;
             _hook.KeyReleased += OnKeyReleased;
-            _hook.KeyTyped += OnKeyTyped;
             _hook.MousePressed += OnMousePressed;
             _hook.MouseWheel += OnMouseWheel;
 
             _hookTask = _hook.RunAsync();
-            _logger.LogInformation("InputActivity SharpHook 已启动 (RecordKeyValues={RecordKeyValues})", _options.RecordKeyValues);
+            _logger.LogInformation("InputActivity SharpHook 已启动");
         }
         catch (Exception ex)
         {
@@ -128,7 +117,6 @@ public sealed class InputActivityService : IHostedService, IDisposable
 
         lock (_sync)
         {
-            FlushKeyTextUnlocked();
             PersistUnlocked(force: true);
         }
 
@@ -145,12 +133,10 @@ public sealed class InputActivityService : IHostedService, IDisposable
     {
         lock (_sync)
         {
-            EnsureBucketsUnlocked(DateTime.Now);
+            EnsureDayUnlocked(DateTime.Now);
             if (!_keysDown.Add(e.Data.KeyCode)) return;
 
             _keyboard++;
-            if (_options.RecordKeyValues)
-                _emitCharFor.Add(e.Data.KeyCode);
             PersistUnlocked(force: false);
         }
     }
@@ -160,21 +146,6 @@ public sealed class InputActivityService : IHostedService, IDisposable
         lock (_sync)
         {
             _keysDown.Remove(e.Data.KeyCode);
-            _emitCharFor.Remove(e.Data.KeyCode);
-        }
-    }
-
-    private void OnKeyTyped(object? sender, KeyboardHookEventArgs e)
-    {
-        if (!_options.RecordKeyValues) return;
-
-        lock (_sync)
-        {
-            // 仅记录本次按下的第一次 KeyTyped，忽略长按连发
-            if (!_emitCharFor.Remove(e.Data.KeyCode)) return;
-
-            EnsureBucketsUnlocked(DateTime.Now);
-            AppendKeyCharUnlocked(e.Data.KeyChar);
         }
     }
 
@@ -182,7 +153,7 @@ public sealed class InputActivityService : IHostedService, IDisposable
     {
         lock (_sync)
         {
-            EnsureBucketsUnlocked(DateTime.Now);
+            EnsureDayUnlocked(DateTime.Now);
             switch (e.Data.Button)
             {
                 case MouseButton.Button1:
@@ -206,67 +177,10 @@ public sealed class InputActivityService : IHostedService, IDisposable
     {
         lock (_sync)
         {
-            EnsureBucketsUnlocked(DateTime.Now);
+            EnsureDayUnlocked(DateTime.Now);
             _wheel++;
             PersistUnlocked(force: false);
         }
-    }
-
-    private void AppendKeyCharUnlocked(char ch)
-    {
-        if (ch is '\r' or '\n')
-        {
-            AppendUnitsUnlocked(EnterSymbol.ToString());
-            _keyBuffer.AppendLine();
-            _keyLineWidth = 0;
-            FlushKeyTextUnlocked();
-            return;
-        }
-
-        if (ch == '\t')
-        {
-            AppendUnitsUnlocked("\t");
-        }
-        else if (!char.IsControl(ch))
-        {
-            AppendUnitsUnlocked(ch.ToString());
-        }
-        else
-        {
-            return;
-        }
-
-        if (_keyBuffer.Length >= 64)
-            FlushKeyTextUnlocked();
-    }
-
-    private void AppendUnitsUnlocked(string text)
-    {
-        var maxWidth = Math.Max(20, _options.LineWidthUnits);
-        foreach (var ch in text)
-        {
-            var w = DisplayWidth(ch);
-            if (_keyLineWidth > 0 && _keyLineWidth + w > maxWidth)
-            {
-                _keyBuffer.AppendLine();
-                _keyLineWidth = 0;
-            }
-
-            _keyBuffer.Append(ch);
-            _keyLineWidth += w;
-        }
-    }
-
-    private void EnsureBucketsUnlocked(DateTime now)
-    {
-        EnsureDayUnlocked(now);
-        var hour = FloorToHour(now);
-        if (hour == _hourBucketLocal) return;
-
-        FlushKeyTextUnlocked();
-        _hourBucketLocal = hour;
-        _keyLineWidth = 0;
-        CleanupKeyFilesUnlocked();
     }
 
     private void EnsureDayUnlocked(DateTime now)
@@ -274,7 +188,6 @@ public sealed class InputActivityService : IHostedService, IDisposable
         var today = DateOnly.FromDateTime(now);
         if (_date == today) return;
 
-        FlushKeyTextUnlocked();
         _date = today;
         _keyboard = 0;
         _mouseLeft = 0;
@@ -282,49 +195,8 @@ public sealed class InputActivityService : IHostedService, IDisposable
         _mouseMiddle = 0;
         _wheel = 0;
         _keysDown.Clear();
-        _emitCharFor.Clear();
-        _keyLineWidth = 0;
         _lastPersistUtc = DateTime.MinValue;
         PersistUnlocked(force: true);
-    }
-
-    private void FlushKeyTextUnlocked()
-    {
-        if (_keyBuffer.Length == 0) return;
-
-        try
-        {
-            Directory.CreateDirectory(_keysDir);
-            var path = Path.Combine(_keysDir, $"keys-{_hourBucketLocal:yyyyMMdd-HH}.txt");
-            File.AppendAllText(path, _keyBuffer.ToString(), Encoding.UTF8);
-            _keyBuffer.Clear();
-            CleanupKeyFilesUnlocked();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug(ex, "写入按键文本失败");
-        }
-    }
-
-    private void CleanupKeyFilesUnlocked()
-    {
-        try
-        {
-            var retain = Math.Max(1, _options.HourlyLogRetainFiles);
-            if (!Directory.Exists(_keysDir)) return;
-
-            foreach (var file in Directory.GetFiles(_keysDir, "keys-*.txt")
-                         .OrderByDescending(File.GetLastWriteTimeUtc)
-                         .Skip(retain))
-            {
-                try { File.Delete(file); }
-                catch { /* ignore */ }
-            }
-        }
-        catch
-        {
-            // ignore
-        }
     }
 
     private void PersistUnlocked(bool force)
@@ -380,9 +252,4 @@ public sealed class InputActivityService : IHostedService, IDisposable
             // ignore corrupt state
         }
     }
-
-    private static DateTime FloorToHour(DateTime value) =>
-        new(value.Year, value.Month, value.Day, value.Hour, 0, 0, value.Kind);
-
-    private static int DisplayWidth(char c) => c <= 0x7F ? 1 : 2;
 }

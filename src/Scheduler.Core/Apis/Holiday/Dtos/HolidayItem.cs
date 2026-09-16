@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Acclaro.Platform.Application.Apis.Holiday.Dtos;
+namespace Scheduler.Core.Apis.Holiday.Dtos;
 
 public class HolidayItem
 {

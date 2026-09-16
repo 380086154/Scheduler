@@ -1,4 +1,4 @@
-namespace Acclaro.Platform.Application.Notifications;
+namespace Scheduler.Core.Notifications;
 
 /// <summary>通知渠道（同一时间只用一个）。</summary>
 public enum NotificationProvider

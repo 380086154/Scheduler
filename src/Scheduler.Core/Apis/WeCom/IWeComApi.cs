@@ -1,6 +1,6 @@
 using WebApiClientCore.Attributes;
 
-namespace Acclaro.Platform.Application.Apis.WeCom;
+namespace Scheduler.Core.Apis.WeCom;
 
 /// <summary>企业微信群机器人 Webhook。</summary>
 #if DEBUG

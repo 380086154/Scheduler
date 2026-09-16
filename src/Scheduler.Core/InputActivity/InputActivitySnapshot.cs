@@ -1,4 +1,4 @@
-namespace Acclaro.Platform.Application.InputActivity;
+namespace Scheduler.Core.InputActivity;
 
 /// <summary>今日输入统计快照（通知用）。</summary>
 public sealed class InputActivitySnapshot

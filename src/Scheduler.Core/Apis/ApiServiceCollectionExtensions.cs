@@ -1,12 +1,12 @@
-﻿using Acclaro.Platform.Application.Apis.Holiday;
-using Acclaro.Platform.Application.Apis.Teams;
-using Acclaro.Platform.Application.Apis.WeCom;
-using Acclaro.Platform.Application.Notifications;
+using Scheduler.Core.Apis.Holiday;
+using Scheduler.Core.Apis.Teams;
+using Scheduler.Core.Apis.WeCom;
+using Scheduler.Core.Notifications;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WebApiClientCore;
 
-namespace Acclaro.Platform.Application.Apis;
+namespace Scheduler.Core.Apis;
 
 public static class ApiServiceCollectionExtensions
 {

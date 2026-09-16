@@ -1,13 +1,13 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
-using Acclaro.Platform.Application.Apis.Holiday.Dtos;
-using Acclaro.Platform.Common.Common;
+using Scheduler.Core.Apis.Holiday.Dtos;
+using Scheduler.Common;
 using Microsoft.Extensions.Configuration;
 
-namespace Acclaro.Platform.Application.Apis.Holiday;
+namespace Scheduler.Core.Apis.Holiday;
 
 /// <summary>
 /// 节假日服务：加载/缓存全年数据，并提供工作日相关判断。

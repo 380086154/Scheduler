@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Acclaro.Platform.Application.InputActivity;
+namespace Scheduler.Core.InputActivity;
 
 public static class InputActivityServiceCollectionExtensions
 {

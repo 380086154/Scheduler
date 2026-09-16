@@ -1,8 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net10.0</TargetFramework>
+		<RootNamespace>Scheduler.App</RootNamespace>
+		<AssemblyName>Scheduler</AssemblyName>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<!-- WebApiClientCore 2.1.6 的 ActionInvoker 仍依赖反射，Native AOT 会启动失败 -->
@@ -18,8 +20,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Acclaro.Platform.Application\Acclaro.Platform.Application.csproj" />
-		<ProjectReference Include="..\Acclaro.Platform.Common\Acclaro.Platform.Common.csproj" />
+		<ProjectReference Include="..\Scheduler.Core\Scheduler.Core.csproj" />
+		<ProjectReference Include="..\Scheduler.Common\Scheduler.Common.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

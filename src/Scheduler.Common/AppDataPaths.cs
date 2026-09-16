@@ -1,4 +1,4 @@
-namespace Acclaro.Platform.Common.Common;
+namespace Scheduler.Common;
 
 /// <summary>
 /// 应用数据目录：

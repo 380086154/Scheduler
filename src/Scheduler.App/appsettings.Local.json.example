@@ -1,0 +1,11 @@
+{
+  "Holiday": {
+    "ApiHubsApiKey": ""
+  },
+  "Notifications": {
+    "Provider": "Teams",
+    "TeamsWebhookUrl": "",
+    "WeComWebhookUrl": "",
+    "DingTalkWebhookUrl": ""
+  }
+}

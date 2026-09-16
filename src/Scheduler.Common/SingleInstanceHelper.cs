@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace Acclaro.Platform.Common.Common;
+namespace Scheduler.Common;
 
 public class SingleInstanceHelper : IDisposable
 {

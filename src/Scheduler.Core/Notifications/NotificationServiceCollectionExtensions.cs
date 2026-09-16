@@ -1,7 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
-namespace Acclaro.Platform.Application.Notifications;
+namespace Scheduler.Core.Notifications;
 
 public static class NotificationServiceCollectionExtensions
 {
@@ -15,9 +16,12 @@ public static class NotificationServiceCollectionExtensions
         switch (provider)
         {
             case NotificationProvider.WeCom:
-                EnsureConfigured(configuration["Notifications:WeComWebhookUrl"], "WeComWebhookUrl");
-                if (WeComWebhookNotifier.ExtractKey(configuration["Notifications:WeComWebhookUrl"]) is null)
-                    throw new InvalidOperationException("Notifications:WeComWebhookUrl 必须包含 key 查询参数。");
+                if (WeComWebhookNotifier.ExtractKey(configuration["Notifications:WeComWebhookUrl"]) is not { Length: > 0 })
+                {
+                    AddDisabledNotifier(services, "Notifications:WeComWebhookUrl 未配置或缺少 key。");
+                    break;
+                }
+
                 services.AddSingleton<INotifier, WeComWebhookNotifier>();
                 break;
 
@@ -26,7 +30,12 @@ public static class NotificationServiceCollectionExtensions
                 break;
 
             default:
-                EnsureConfigured(configuration["Notifications:TeamsWebhookUrl"], "TeamsWebhookUrl");
+                if (string.IsNullOrWhiteSpace(configuration["Notifications:TeamsWebhookUrl"]))
+                {
+                    AddDisabledNotifier(services, "Notifications:TeamsWebhookUrl 未配置。");
+                    break;
+                }
+
                 services.AddSingleton<INotifier, TeamsWebhookNotifier>();
                 break;
         }
@@ -34,9 +43,13 @@ public static class NotificationServiceCollectionExtensions
         return services;
     }
 
-    private static void EnsureConfigured(string? value, string name)
+    private static void AddDisabledNotifier(IServiceCollection services, string reason)
     {
-        if (string.IsNullOrWhiteSpace(value))
-            throw new InvalidOperationException($"Notifications:{name} 未配置。");
+        services.AddSingleton<INotifier>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("Notifications");
+            logger.LogWarning("{Reason} 通知功能已禁用，后台统计与在岗采样仍会运行。", reason);
+            return new NoOpNotifier();
+        });
     }
 }

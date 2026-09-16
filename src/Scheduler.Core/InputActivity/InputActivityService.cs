@@ -1,5 +1,5 @@
 using System.Runtime.Versioning;
-using Acclaro.Platform.Common.Common;
+using Scheduler.Common;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -7,7 +7,7 @@ using SharpHook;
 using SharpHook.Data;
 using SharpHook.Providers;
 
-namespace Acclaro.Platform.Application.InputActivity;
+namespace Scheduler.Core.InputActivity;
 
 /// <summary>
 /// 使用 SharpHook 统计今日键鼠次数（仅计数，不记录按键内容）。

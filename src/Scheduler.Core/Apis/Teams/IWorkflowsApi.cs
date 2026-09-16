@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using Acclaro.Platform.Application.Apis.Teams.Dtos;
+using Scheduler.Core.Apis.Teams.Dtos;
 using WebApiClientCore.Attributes;
 
-namespace Acclaro.Platform.Application.Apis.Teams;
+namespace Scheduler.Core.Apis.Teams;
 
 /// <summary>
 /// Teams 工作流

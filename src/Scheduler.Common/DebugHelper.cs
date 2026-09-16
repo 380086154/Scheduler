@@ -1,4 +1,4 @@
-﻿namespace Acclaro.Platform.Common.Common;
+namespace Scheduler.Common;
 
 public static class DebugHelper
 {

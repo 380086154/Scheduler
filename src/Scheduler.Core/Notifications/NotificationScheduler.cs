@@ -1,10 +1,10 @@
-using Acclaro.Platform.Application.Apis.Holiday;
-using Acclaro.Platform.Application.InputActivity;
-using Acclaro.Platform.Application.Services;
+using Scheduler.Core.Apis.Holiday;
+using Scheduler.Core.InputActivity;
+using Scheduler.Core.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Acclaro.Platform.Application.Notifications;
+namespace Scheduler.Core.Notifications;
 
 public sealed class NotificationScheduler(
     IOptions<NotificationOptions> options,

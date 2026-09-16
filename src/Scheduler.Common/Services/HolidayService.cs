@@ -1,6 +1,6 @@
-﻿using Acclaro.Platform.Common.Common;
+using Scheduler.Common;
 
-namespace Acclaro.Platform.Common.Services;
+namespace Scheduler.Common.Services;
 
 /// <summary>
 /// 节假日服务类

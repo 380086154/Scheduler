@@ -1,4 +1,4 @@
-namespace Acclaro.Platform.Application.Notifications;
+namespace Scheduler.Core.Notifications;
 
 public interface INotifier
 {

@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace Acclaro.Platform.Common.Common;
+namespace Scheduler.Common;
 
 /// <summary>
 /// Windows Win32 原生 API 静态封装类，仅 Windows 平台可用

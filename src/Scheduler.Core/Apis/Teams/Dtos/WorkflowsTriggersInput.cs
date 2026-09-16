@@ -1,6 +1,6 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
-namespace Acclaro.Platform.Application.Apis.Teams.Dtos;
+namespace Scheduler.Core.Apis.Teams.Dtos;
 
 public class WorkflowsTriggersInput
 {

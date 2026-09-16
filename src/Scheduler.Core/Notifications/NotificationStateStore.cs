@@ -1,6 +1,6 @@
-using Acclaro.Platform.Common.Common;
+using Scheduler.Common;
 
-namespace Acclaro.Platform.Application.Notifications;
+namespace Scheduler.Core.Notifications;
 
 /// <summary>
 /// 通知已发送状态落盘（ruleId + 日期），避免重启重复发送。

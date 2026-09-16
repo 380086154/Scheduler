@@ -1,6 +1,6 @@
 using WebApiClientCore.Attributes;
 
-namespace Acclaro.Platform.Application.Apis.Holiday;
+namespace Scheduler.Core.Apis.Holiday;
 
 /// <summary>接口坞节假日 API（Timor 备用源）。</summary>
 #if DEBUG

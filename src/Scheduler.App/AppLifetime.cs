@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using Acclaro.Platform.Common.Common;
+using Scheduler.Common;
 
-namespace Acclaro.Platform.Scheduler;
+namespace Scheduler.App;
 
 internal static class AppLifetime
 {

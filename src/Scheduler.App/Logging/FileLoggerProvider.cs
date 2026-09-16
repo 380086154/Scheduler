@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace Acclaro.Platform.Scheduler.Logging;
+namespace Scheduler.App.Logging;
 
 /// <summary>
 /// 固定写 logs.log；跨天时备份为 logs.yyyyMMdd.log（类似 log4net / ABP），并按天数清理备份。

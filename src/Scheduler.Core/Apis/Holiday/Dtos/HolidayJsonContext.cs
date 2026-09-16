@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Acclaro.Platform.Application.Apis.Holiday.Dtos;
+namespace Scheduler.Core.Apis.Holiday.Dtos;
 
 [JsonSourceGenerationOptions(
     PropertyNameCaseInsensitive = true,

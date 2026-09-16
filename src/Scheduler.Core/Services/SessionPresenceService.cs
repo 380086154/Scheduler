@@ -1,9 +1,9 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using Acclaro.Platform.Common.Common;
+using Scheduler.Common;
 using Microsoft.Win32;
 
-namespace Acclaro.Platform.Application.Services;
+namespace Scheduler.Core.Services;
 
 /// <summary>
 /// 会话在岗检测：本地解锁 + 非 ToDesk 远程，并累计今日在公司时长（落盘防重启丢失）。

@@ -1,6 +1,6 @@
-using Acclaro.Platform.Application.Apis.Teams;
+using Scheduler.Core.Apis.Teams;
 
-namespace Acclaro.Platform.Application.Notifications;
+namespace Scheduler.Core.Notifications;
 
 /// <summary>
 /// 通过 WebApiClientCore / IWorkflowsApi 发送 Teams Adaptive Card（原始 JSON）。

@@ -1,11 +1,12 @@
-﻿using Acclaro.Platform.Application.Apis;
-using Acclaro.Platform.Application.Apis.Holiday;
-using Acclaro.Platform.Application.InputActivity;
-using Acclaro.Platform.Application.Notifications;
-using Acclaro.Platform.Application.Services;
-using Acclaro.Platform.Common.Common;
-using Acclaro.Platform.Scheduler;
-using Acclaro.Platform.Scheduler.Logging;
+using Scheduler.Core.Apis;
+using Scheduler.Core.Apis.Holiday;
+using Scheduler.Core.InputActivity;
+using Scheduler.Core.Notifications;
+using Scheduler.Core.Services;
+using Scheduler.Common;
+using Scheduler.App;
+using Scheduler.App.Logging;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -18,6 +19,7 @@ if (!singleInstance.CheckAndActivateInstance(false))
 }
 
 var builder = Host.CreateApplicationBuilder(args);
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
 builder.Logging.AddFile(builder.Configuration);
 builder.Services.AddWindowsService();

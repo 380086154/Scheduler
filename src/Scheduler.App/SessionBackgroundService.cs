@@ -1,10 +1,10 @@
-﻿using Acclaro.Platform.Application.Apis.Holiday;
-using Acclaro.Platform.Application.Notifications;
-using Acclaro.Platform.Application.Services;
+using Scheduler.Core.Apis.Holiday;
+using Scheduler.Core.Notifications;
+using Scheduler.Core.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Acclaro.Platform.Scheduler;
+namespace Scheduler.App;
 
 /// <summary>
 /// 会话后端服务

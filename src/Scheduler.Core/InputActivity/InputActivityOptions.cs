@@ -1,4 +1,4 @@
-namespace Acclaro.Platform.Application.InputActivity;
+namespace Scheduler.Core.InputActivity;
 
 public sealed class InputActivityOptions
 {

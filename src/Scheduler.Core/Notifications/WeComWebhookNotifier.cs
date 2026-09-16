@@ -1,7 +1,7 @@
-using Acclaro.Platform.Application.Apis.WeCom;
+using Scheduler.Core.Apis.WeCom;
 using Microsoft.Extensions.Options;
 
-namespace Acclaro.Platform.Application.Notifications;
+namespace Scheduler.Core.Notifications;
 
 /// <summary>企业微信群机器人（text）。</summary>
 public sealed class WeComWebhookNotifier(IWeComApi weComApi, IOptions<NotificationOptions> options) : INotifier

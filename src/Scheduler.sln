@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.7.11925.98
@@ -7,11 +7,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARchGL.Platform.LockScreen"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARchGL.Platform.SessionService", "ARchGL.Platform.SessionService\ARchGL.Platform.SessionService.csproj", "{D3AFA358-7118-467E-AA9C-B947397EFEFB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Acclaro.Platform.Scheduler", "Acclaro.Platform.Scheduler\Acclaro.Platform.Scheduler.csproj", "{7DFC21A1-B361-4BF0-B805-F9850E40551C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scheduler.App", "Scheduler.App\Scheduler.App.csproj", "{7DFC21A1-B361-4BF0-B805-F9850E40551C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Acclaro.Platform.Common", "Acclaro.Platform.Common\Acclaro.Platform.Common.csproj", "{1D2CB9E9-92E9-44F5-8B74-58F682A5F784}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scheduler.Common", "Scheduler.Common\Scheduler.Common.csproj", "{1D2CB9E9-92E9-44F5-8B74-58F682A5F784}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Acclaro.Platform.Application", "Acclaro.Platform.Application\Acclaro.Platform.Application.csproj", "{D0656EDC-9874-4DB9-B1A9-D6C4DAC0B7B2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scheduler.Core", "Scheduler.Core\Scheduler.Core.csproj", "{D0656EDC-9874-4DB9-B1A9-D6C4DAC0B7B2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,13 +20,9 @@ Global
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{57B8E312-63EB-4CB9-86DF-2E4E048152A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{57B8E312-63EB-4CB9-86DF-2E4E048152A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57B8E312-63EB-4CB9-86DF-2E4E048152A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{57B8E312-63EB-4CB9-86DF-2E4E048152A8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D3AFA358-7118-467E-AA9C-B947397EFEFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D3AFA358-7118-467E-AA9C-B947397EFEFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3AFA358-7118-467E-AA9C-B947397EFEFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D3AFA358-7118-467E-AA9C-B947397EFEFB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7DFC21A1-B361-4BF0-B805-F9850E40551C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7DFC21A1-B361-4BF0-B805-F9850E40551C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7DFC21A1-B361-4BF0-B805-F9850E40551C}.Release|Any CPU.ActiveCfg = Release|Any CPU

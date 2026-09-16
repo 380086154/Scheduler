@@ -1,4 +1,4 @@
-﻿namespace Acclaro.Platform.Application.Apis.Holiday.Dtos;
+namespace Scheduler.Core.Apis.Holiday.Dtos;
 
 public class Response<T>
 {

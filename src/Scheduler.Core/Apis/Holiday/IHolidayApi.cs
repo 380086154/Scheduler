@@ -1,7 +1,7 @@
-﻿using Acclaro.Platform.Application.Apis.Holiday.Dtos;
+using Scheduler.Core.Apis.Holiday.Dtos;
 using WebApiClientCore.Attributes;
 
-namespace Acclaro.Platform.Application.Apis.Holiday;
+namespace Scheduler.Core.Apis.Holiday;
 
 /// <summary>
 /// 提莫的神秘小站 - 免费节假日 API

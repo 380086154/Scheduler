@@ -1,4 +1,4 @@
-namespace Acclaro.Platform.Application.Notifications;
+namespace Scheduler.Core.Notifications;
 
 /// <summary>钉钉群机器人占位：配置位已留，发送逻辑尚未实现。</summary>
 public sealed class DingTalkWebhookNotifier : INotifier

@@ -74,8 +74,16 @@ public class HolidayService
         var file = GetHolidayFile(year);
         if (!File.Exists(file))
         {
-            var downloaded = await DownloadYearJsonAsync(year);
-            await File.WriteAllTextAsync(file, downloaded);
+            try
+            {
+                var downloaded = await DownloadYearJsonAsync(year);
+                await File.WriteAllTextAsync(file, downloaded);
+            }
+            catch (HolidayNotPublishedException)
+            {
+                // 这一年还没有公布，不落盘，工作日判断按普通周末处理。
+                return;
+            }
         }
 
         var json = await File.ReadAllTextAsync(file);
@@ -93,10 +101,18 @@ public class HolidayService
     /// </summary>
     private async Task<string> DownloadYearJsonAsync(int year, CancellationToken cancellationToken = default)
     {
+        var sawEmpty = false;
         try
         {
             var json = await _holidayApi.GetYearAsync(year, cancellationToken);
-            if (IsValidHolidayJson(json)) return json;
+            switch (ClassifyHolidayJson(json))
+            {
+                case HolidayJsonKind.Ready:
+                    return json;
+                case HolidayJsonKind.Empty:
+                    sawEmpty = true;
+                    break;
+            }
         }
         catch
         {
@@ -107,14 +123,37 @@ public class HolidayService
         {
             var url = $"https://timor.tech/api/holiday/year/{year}";
             var viaCurl = await DownloadViaCurlAsync(url, cancellationToken);
-            if (IsValidHolidayJson(viaCurl)) return viaCurl;
+            switch (ClassifyHolidayJson(viaCurl))
+            {
+                case HolidayJsonKind.Ready:
+                    return viaCurl;
+                case HolidayJsonKind.Empty:
+                    sawEmpty = true;
+                    break;
+            }
         }
         catch
         {
             // 继续尝试接口坞
         }
 
-        return await DownloadViaApiHubsAsync(year, cancellationToken);
+        try
+        {
+            return await DownloadViaApiHubsAsync(year, cancellationToken);
+        }
+        catch (HolidayNotPublishedException)
+        {
+            sawEmpty = true;
+        }
+        catch (Exception) when (sawEmpty)
+        {
+            // Timor 已经说明这一年是空的，后面的源失败不再改成下载失败。
+        }
+
+        if (sawEmpty)
+            throw new HolidayNotPublishedException(year);
+
+        throw new InvalidOperationException($"节假日数据无效 (year={year}).");
     }
 
     /// <summary>从接口坞拉取全年日历并转换为 Timor year JSON。</summary>
@@ -131,11 +170,15 @@ public class HolidayService
             token: cancellationToken);
 
         var api = JsonSerializer.Deserialize(raw, HolidayJsonContext.Default.ApiHubsResponse);
-        if (api?.Code != 0 || api.Data?.List is not { Count: > 0 } list)
+        if (api?.Code != 0)
             throw new InvalidOperationException($"接口坞节假日数据无效 (year={year}).");
+        if (api.Data?.List is not { Count: > 0 } list)
+            throw new HolidayNotPublishedException(year);
 
         var timorJson = ConvertApiHubsToTimorJson(list);
-        if (!IsValidHolidayJson(timorJson))
+        if (ClassifyHolidayJson(timorJson) == HolidayJsonKind.Empty)
+            throw new HolidayNotPublishedException(year);
+        if (ClassifyHolidayJson(timorJson) != HolidayJsonKind.Ready)
             throw new InvalidOperationException("接口坞数据转换后不是有效的节假日 JSON。");
 
         return timorJson;
@@ -222,7 +265,7 @@ public class HolidayService
             out date);
     }
 
-    /// <summary>粗判是否为可用的 Timor 形节假日 JSON（排除 Cloudflare 挑战页）。</summary>
+    /// <summary>粗判是否为 Timor 形节假日 JSON（排除 Cloudflare 挑战页）。空 map 也算这种形状。</summary>
     private static bool IsValidHolidayJson(string? json)
     {
         if (string.IsNullOrWhiteSpace(json)) return false;
@@ -230,6 +273,21 @@ public class HolidayService
         return trimmed.StartsWith('{')
                && trimmed.Contains("\"holiday\"", StringComparison.Ordinal)
                && !trimmed.Contains("Just a moment", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// code=0 且 holiday 为空对象表示接口成功，但这一年还没有放假安排。不能当成功数据保存。
+    /// </summary>
+    private static HolidayJsonKind ClassifyHolidayJson(string? json)
+    {
+        if (!IsValidHolidayJson(json))
+            return HolidayJsonKind.Invalid;
+
+        var response = JsonSerializer.Deserialize(json!, HolidayJsonContext.Default.ResponseDictionaryStringHolidayItem);
+        if (response?.Code != 0 || response.Holiday is null)
+            return HolidayJsonKind.Invalid;
+
+        return response.Holiday.Count == 0 ? HolidayJsonKind.Empty : HolidayJsonKind.Ready;
     }
 
     /// <summary>
@@ -355,5 +413,138 @@ public class HolidayService
     private static bool IsNormalWeekday(DateTime date)
         => date.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday);
 
+    public IReadOnlyList<int> ListStoredYears()
+    {
+        if (!Directory.Exists(_holidayDirectory))
+            return [];
+
+        var years = new List<int>();
+        foreach (var file in Directory.EnumerateFiles(_holidayDirectory, "holiday*.json"))
+        {
+            var name = Path.GetFileNameWithoutExtension(file);
+            if (name.StartsWith("holiday", StringComparison.Ordinal)
+                && int.TryParse(name["holiday".Length..], NumberStyles.None, CultureInfo.InvariantCulture, out var year))
+                years.Add(year);
+        }
+
+        years.Sort();
+        return years;
+    }
+
+    /// <summary>返回该年例外日的副本。没有本地文件时为空。</summary>
+    public IReadOnlyList<HolidayItem> CopyYear(int year)
+    {
+        var map = GetOrLoadMap(year);
+        if (map is null)
+            return [];
+
+        return map.Values.Select(CloneItem).OrderBy(item => item.Date, StringComparer.Ordinal).ToList();
+    }
+
+    /// <summary>写入该年文件，并替换内存中的日历，工作日判断立即使用新数据。</summary>
+    public void SaveYear(int year, IReadOnlyList<HolidayItem> items)
+    {
+        var map = new Dictionary<string, HolidayItem>(StringComparer.Ordinal);
+        foreach (var item in items)
+        {
+            if (!DateTime.TryParseExact(item.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+                || date.Year != year)
+                throw new InvalidOperationException($"Invalid holiday date: {item.Date}");
+
+            map[date.ToString("MM-dd", CultureInfo.InvariantCulture)] = CloneItem(item);
+        }
+
+        var response = new Response<Dictionary<string, HolidayItem>>
+        {
+            Code = 0,
+            Holiday = map
+        };
+        var json = JsonSerializer.Serialize(response, HolidayJsonContext.Default.ResponseDictionaryStringHolidayItem);
+        Directory.CreateDirectory(_holidayDirectory);
+        File.WriteAllText(GetHolidayFile(year), json);
+        _cache[year] = map;
+    }
+
+    /// <summary>手动下载指定年份并覆盖本地文件。自动逻辑只在文件不存在时下载。</summary>
+    public async Task FetchYearAsync(int year, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var json = await DownloadYearJsonAsync(year, cancellationToken);
+            Directory.CreateDirectory(_holidayDirectory);
+            await File.WriteAllTextAsync(GetHolidayFile(year), json, cancellationToken);
+            _cache.TryRemove(year, out _);
+            GetOrLoadMap(year);
+        }
+        catch (HolidayNotPublishedException)
+        {
+            // 之前误把空 map 存下来时，清掉这个空文件，年份列表不再把它当成已获取。
+            RemoveEmptyHolidayFile(year);
+            throw;
+        }
+    }
+
+    private void RemoveEmptyHolidayFile(int year)
+    {
+        var file = GetHolidayFile(year);
+        if (!File.Exists(file))
+            return;
+
+        var json = File.ReadAllText(file);
+        if (ClassifyHolidayJson(json) != HolidayJsonKind.Empty)
+            return;
+
+        File.Delete(file);
+        _cache.TryRemove(year, out _);
+    }
+
+    private Dictionary<string, HolidayItem>? GetOrLoadMap(int year)
+    {
+        if (_cache.TryGetValue(year, out var cached))
+            return cached;
+
+        var file = GetHolidayFile(year);
+        if (!File.Exists(file))
+            return null;
+
+        var json = File.ReadAllText(file);
+        var response = JsonSerializer.Deserialize(json, HolidayJsonContext.Default.ResponseDictionaryStringHolidayItem);
+        if (response?.Code != 0 || response.Holiday is null)
+            throw new InvalidOperationException($"Invalid holiday file: {file}");
+
+        _cache[year] = response.Holiday;
+        return response.Holiday;
+    }
+
+    private static HolidayItem CloneItem(HolidayItem item) => new()
+    {
+        Holiday = item.Holiday,
+        Name = item.Name,
+        Wage = item.Wage,
+        Date = item.Date,
+        Rest = item.Rest,
+        After = item.After,
+        Target = item.Target
+    };
+
     private string GetHolidayFile(int year) => Path.Combine(_holidayDirectory, $"holiday{year}.json");
+
+    private enum HolidayJsonKind
+    {
+        Invalid,
+        Empty,
+        Ready
+    }
+}
+
+/// <summary>接口调用成功，但该年放假安排还没有公布。</summary>
+public sealed class HolidayNotPublishedException : InvalidOperationException
+{
+    public HolidayNotPublishedException(int year)
+        : base($"Holiday schedule for {year} has not been published.")
+    {
+        Year = year;
+    }
+
+    public int Year { get; }
 }

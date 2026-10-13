@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Scheduler.App.Localization;
 using Scheduler.App.Settings;
+using Scheduler.Core.Apis.Holiday;
 using Scheduler.Core.InputActivity;
 using Scheduler.Core.Notifications;
 using Scheduler.Core.Services;
@@ -35,6 +36,9 @@ public partial class SettingsWindow : Window
         RefreshTodayStatus();
         UpdateWebhookHint();
         UpdateLanguageToggle();
+        HolidayPanel.Attach(_services.GetRequiredService<HolidayService>(), _localization);
+        HolidayPanel.StatusChanged += (_, _) => ShowCurrentStatus();
+        SettingsTag.IsChecked = true;
         _localization.LanguageChanged += OnLanguageChanged;
         Closed += (_, _) => _localization.LanguageChanged -= OnLanguageChanged;
     }
@@ -154,6 +158,8 @@ public partial class SettingsWindow : Window
     {
         var index = RuleList.SelectedIndex;
         if (index < 0) return;
+        var name = string.IsNullOrWhiteSpace(_rules[index].Title) ? _rules[index].Id : _rules[index].Title;
+        if (!ConfirmDelete(name)) return;
         _rules.RemoveAt(index);
         RefreshRuleList(index);
     }
@@ -232,6 +238,12 @@ public partial class SettingsWindow : Window
 
     private void SaveButton_OnClick(object sender, RoutedEventArgs e)
     {
+        if (HolidayTag.IsChecked == true)
+        {
+            HolidayPanel.TrySave();
+            return;
+        }
+
         FlushSelectedRule();
         if (!TryCollect(out var settings, out var error, out var errorArgs))
         {
@@ -328,8 +340,48 @@ public partial class SettingsWindow : Window
         RebuildChoices();
         UpdateLanguageToggle();
         RefreshTodayStatus();
-        if (_statusKey is not null)
-            StatusText.Text = _localization.Format(_statusKey, _statusArgs);
+        HolidayPanel.ApplyLanguage();
+        ShowCurrentStatus();
+    }
+
+    private void PageTag_OnChecked(object sender, RoutedEventArgs e)
+    {
+        if (SettingsPage is null || HolidayPanel is null)
+            return;
+
+        var holiday = HolidayTag.IsChecked == true;
+        SettingsPage.Visibility = holiday ? Visibility.Collapsed : Visibility.Visible;
+        HolidayPanel.Visibility = holiday ? Visibility.Visible : Visibility.Collapsed;
+        TestButton.Visibility = holiday ? Visibility.Collapsed : Visibility.Visible;
+        if (holiday)
+            HolidayPanel.EnsureReady();
+
+        ShowCurrentStatus();
+    }
+
+    private void ShowCurrentStatus()
+    {
+        if (HolidayTag.IsChecked == true)
+        {
+            StatusText.Text = HolidayPanel.StatusKey is { } key
+                ? _localization.Format(key, HolidayPanel.StatusArgs)
+                : "";
+            return;
+        }
+
+        StatusText.Text = _statusKey is null
+            ? ""
+            : _localization.Format(_statusKey, _statusArgs);
+    }
+
+    private bool ConfirmDelete(string name)
+    {
+        var answer = System.Windows.MessageBox.Show(
+            _localization.Format(LocalizationKeys.DeleteConfirm, name),
+            _localization.GetString(LocalizationKeys.AppName),
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+        return answer == MessageBoxResult.Yes;
     }
 
     private void RebuildChoices()

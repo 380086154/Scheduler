@@ -1,13 +1,50 @@
 <Window x:Class="Scheduler.App.Ui.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Scheduler.App.Ui"
         Title="{DynamicResource WindowTitle}"
-        Height="620" Width="820"
+        Height="720" Width="820"
         MinHeight="520" MinWidth="720"
         WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <Style x:Key="PageTagStyle" TargetType="RadioButton">
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Border" Background="#F4F5F7" BorderBrush="#D0D5DD" BorderThickness="1"
+                                CornerRadius="4" Padding="12,0">
+                            <ContentPresenter x:Name="Content" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextElement.Foreground="#333" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#1B4F72" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#1B4F72" />
+                                <Setter TargetName="Content" Property="TextElement.Foreground" Value="White" />
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True" />
+                                    <Condition Property="IsChecked" Value="False" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Border" Property="Background" Value="#E6E8EC" />
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <DockPanel Margin="16">
         <DockPanel DockPanel.Dock="Top" LastChildFill="False" Margin="0,0,0,12">
             <Button DockPanel.Dock="Right"
+                    Height="32"
+                    VerticalAlignment="Center"
                     Click="LanguageButton_OnClick"
                     Padding="8,4"
                     ToolTip="{DynamicResource SwitchLanguageToolTip}">
@@ -17,16 +54,27 @@
                     <TextBlock x:Name="EnglishLabel" Text="English" />
                 </StackPanel>
             </Button>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <RadioButton x:Name="SettingsTag" Style="{StaticResource PageTagStyle}" GroupName="SettingsPage"
+                             Content="{DynamicResource TagSettings}" Checked="PageTag_OnChecked" />
+                <RadioButton x:Name="HolidayTag" Style="{StaticResource PageTagStyle}" GroupName="SettingsPage"
+                             Content="{DynamicResource TagHoliday}" Checked="PageTag_OnChecked" />
+            </StackPanel>
         </DockPanel>
         <DockPanel DockPanel.Dock="Bottom" LastChildFill="False" Margin="0,16,0,0">
-            <TextBlock x:Name="StatusText" DockPanel.Dock="Left" VerticalAlignment="Center" Foreground="#555" TextWrapping="Wrap" MaxWidth="480" />
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button x:Name="TestButton" Content="{DynamicResource SendTest}" Margin="0,0,8,0" Click="TestButton_OnClick" />
-                <Button x:Name="SaveButton" Content="{DynamicResource Save}" Click="SaveButton_OnClick" />
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                <Button x:Name="TestButton" Margin="0,0,8,0" Click="TestButton_OnClick">
+                    <AccessText Text="{DynamicResource SendTest}" />
+                </Button>
+                <Button x:Name="SaveButton" Click="SaveButton_OnClick">
+                    <AccessText Text="{DynamicResource Save}" />
+                </Button>
             </StackPanel>
+            <TextBlock x:Name="StatusText" VerticalAlignment="Center" Foreground="#555" TextWrapping="Wrap" MaxWidth="520" />
         </DockPanel>
 
         <Grid>
+            <Grid x:Name="SettingsPage">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -36,7 +84,9 @@
 
             <GroupBox Header="{DynamicResource TodayStatus}" Padding="8" Margin="0,0,0,12">
                 <DockPanel>
-                    <Button DockPanel.Dock="Right" Content="{DynamicResource Refresh}" Click="RefreshStatus_OnClick" />
+                    <Button DockPanel.Dock="Right" Click="RefreshStatus_OnClick">
+                        <AccessText Text="{DynamicResource Refresh}" />
+                    </Button>
                     <TextBlock x:Name="TodayStatusText" VerticalAlignment="Center" TextWrapping="Wrap" />
                 </DockPanel>
             </GroupBox>
@@ -72,8 +122,12 @@
 
                     <DockPanel>
                         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
-                            <Button Content="{DynamicResource Add}" Click="AddRule_OnClick" Margin="0,0,8,0" />
-                            <Button Content="{DynamicResource Delete}" Click="DeleteRule_OnClick" />
+                            <Button Click="AddRule_OnClick" Margin="0,0,8,0">
+                                <AccessText Text="{DynamicResource Add}" />
+                            </Button>
+                            <Button Click="DeleteRule_OnClick">
+                                <AccessText Text="{DynamicResource Delete}" />
+                            </Button>
                         </StackPanel>
                         <ListBox x:Name="RuleList" SelectionChanged="RuleList_OnSelectionChanged" />
                     </DockPanel>
@@ -118,9 +172,15 @@
             </GroupBox>
 
             <StackPanel Grid.Row="3" Orientation="Horizontal">
-                <CheckBox x:Name="StartWithWindowsBox" Content="{DynamicResource StartWithWindows}" Margin="0,0,24,0" />
-                <CheckBox x:Name="InputStatsBox" Content="{DynamicResource InputStats}" />
+                <CheckBox x:Name="StartWithWindowsBox" Margin="0,0,24,0">
+                    <AccessText Text="{DynamicResource StartWithWindows}" />
+                </CheckBox>
+                <CheckBox x:Name="InputStatsBox">
+                    <AccessText Text="{DynamicResource InputStats}" />
+                </CheckBox>
             </StackPanel>
+            </Grid>
+            <local:HolidayCalendarPanel x:Name="HolidayPanel" Visibility="Collapsed" />
         </Grid>
     </DockPanel>
 </Window>

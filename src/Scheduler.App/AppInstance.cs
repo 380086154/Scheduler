@@ -28,7 +28,7 @@ internal sealed class AppInstance : IDisposable
             }
             catch
             {
-                // ignore
+                // 忽略
             }
 
             _mutex.Dispose();

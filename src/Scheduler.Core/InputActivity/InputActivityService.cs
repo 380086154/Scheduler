@@ -126,7 +126,7 @@ public sealed class InputActivityService : IHostedService, IDisposable
     public void Dispose()
     {
         try { _hook?.Dispose(); }
-        catch { /* ignore */ }
+        catch { /* 忽略 */ }
     }
 
     private void OnKeyPressed(object? sender, KeyboardHookEventArgs e)
@@ -250,7 +250,7 @@ public sealed class InputActivityService : IHostedService, IDisposable
         }
         catch
         {
-            // ignore corrupt state
+            // 忽略损坏的状态
         }
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Scheduler.App.Localization;
 using Scheduler.App.Settings;
+using Scheduler.Core.Settings;
 using Scheduler.Core.Apis.Holiday;
 using Scheduler.Core.InputActivity;
 using Scheduler.Core.Notifications;

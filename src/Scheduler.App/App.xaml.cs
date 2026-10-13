@@ -3,15 +3,17 @@ using System.Windows.Threading;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Scheduler.App.Localization;
-using Scheduler.App.Logging;
-using Scheduler.App.Settings;
 using Scheduler.App.Ui;
+using Scheduler.Common;
+using Scheduler.Core.Logging;
+using Scheduler.Core.Settings;
 
 namespace Scheduler.App;
 
 public partial class App : System.Windows.Application
 {
     private AppInstance? _instance;
+    private NotificationDuty? _notificationDuty;
     private IHost? _host;
     private TrayController? _tray;
     private SettingsWindow? _settings;
@@ -33,16 +35,20 @@ public partial class App : System.Windows.Application
             return;
         }
 
+        var runNotifications = NotificationDuty.TryAcquire(out _notificationDuty);
         _instance.ShowSettingsRequested += () => Dispatch(ShowSettings);
         _localization = new LocalizationService();
 
         try
         {
-            _host = AppHost.Build(e.Args);
+            _host = AppHost.Build(e.Args, runNotifications);
 
-            // 先挂托盘，再 await Host。否则 async OnStartup 让出线程时既没有窗口也没有托盘。
-            _tray = new TrayController(_host.Services, _localization, () => Dispatch(ShowSettings), () => Dispatch(RequestExit));
-            _tray.Show();
+            // 服务已在发通知时，这个进程只改配置，不再挂托盘。
+            if (runNotifications)
+            {
+                _tray = new TrayController(_host.Services, _localization, () => Dispatch(ShowSettings), () => Dispatch(RequestExit));
+                _tray.Show();
+            }
 
             await _host.StartAsync();
 
@@ -53,10 +59,10 @@ public partial class App : System.Windows.Application
                 FileLoggingExtensions.DefaultLogDirectory,
                 UserSettingsStore.FilePath);
 
-            if (UserSettingsStore.WasSeededThisRun || e.Args.Contains("--settings", StringComparer.OrdinalIgnoreCase))
+            if (!runNotifications || UserSettingsStore.WasSeededThisRun || e.Args.Contains("--settings", StringComparer.OrdinalIgnoreCase))
                 ShowSettings();
             else
-                _tray.ShowBalloon(
+                _tray!.ShowBalloon(
                     Text(LocalizationKeys.BalloonTitle),
                     Text(LocalizationKeys.BalloonText));
         }
@@ -85,11 +91,12 @@ public partial class App : System.Windows.Application
             }
             catch
             {
-                // ignore shutdown errors
+                // 忽略关闭时的错误
             }
         }
 
         _instance?.Dispose();
+        _notificationDuty?.Dispose();
         base.OnExit(e);
     }
 

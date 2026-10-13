@@ -48,7 +48,7 @@ public sealed class NotificationStateStore
         }
         catch
         {
-            // ignore
+            // 忽略
         }
     }
 
@@ -60,7 +60,7 @@ public sealed class NotificationStateStore
         }
         catch
         {
-            // ignore
+            // 忽略
         }
     }
 }

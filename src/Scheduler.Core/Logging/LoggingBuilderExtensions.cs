@@ -2,7 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Scheduler.App.Logging;
+namespace Scheduler.Core.Logging;
 
 public static class FileLoggingExtensions
 {

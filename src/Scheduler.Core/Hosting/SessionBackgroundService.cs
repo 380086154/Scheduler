@@ -1,13 +1,14 @@
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Scheduler.Core.Apis.Holiday;
 using Scheduler.Core.Notifications;
 using Scheduler.Core.Services;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
-namespace Scheduler.App;
+namespace Scheduler.Core.Hosting;
 
 /// <summary>
-/// 会话后端服务
+/// 节假日刷新、在岗采样，以及定时通知。
+/// 仅由持有 <see cref="Scheduler.Common.NotificationDuty"/> 的进程注册。
 /// </summary>
 public class SessionBackgroundService(
     HolidayService holidayService,
@@ -27,10 +28,8 @@ public class SessionBackgroundService(
     {
         logger.LogInformation("SessionBackgroundService 已启动");
 
-        // 启动时确保当年节假日文件就绪
         await holidayService.InitializeAsync();
 
-        // 启动立即采样一次在岗时长
         presenceService.Sample();
         LogHeartbeat(DateTime.Now);
 
@@ -82,10 +81,7 @@ public class SessionBackgroundService(
 
             // 跨天执行
             if (day != 0 && day != date.Day)
-            {
-                // logger.LogInformation("跨天：尝试获取新的节假日数据");
                 await holidayService.InitializeAsync(true);
-            }
 
             day = date.Day;
         }

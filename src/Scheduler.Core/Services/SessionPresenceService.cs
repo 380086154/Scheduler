@@ -115,7 +115,7 @@ public sealed class SessionPresenceService
         }
         catch
         {
-            // ignore corrupt state
+            // 忽略损坏的状态
         }
     }
 
@@ -140,7 +140,7 @@ public sealed class SessionPresenceService
         }
         catch
         {
-            // ignore IO errors
+            // 忽略 IO 错误
         }
     }
 
@@ -274,7 +274,7 @@ public sealed class SessionPresenceService
         }
         catch
         {
-            // ignore
+            // 忽略
         }
 
         return false;

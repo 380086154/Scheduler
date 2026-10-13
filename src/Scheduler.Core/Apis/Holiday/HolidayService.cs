@@ -339,7 +339,7 @@ public class HolidayService
         }
         finally
         {
-            try { if (File.Exists(tempFile)) File.Delete(tempFile); } catch { /* ignore */ }
+            try { if (File.Exists(tempFile)) File.Delete(tempFile); } catch { /* 忽略 */ }
         }
     }
 

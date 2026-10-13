@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace Scheduler.App.Logging;
+namespace Scheduler.Core.Logging;
 
 /// <summary>
 /// 固定写 logs.log；跨天时备份为 logs.yyyyMMdd.log（类似 log4net / ABP），并按天数清理备份。
@@ -100,7 +100,7 @@ public sealed class FileLoggerProvider(string directory, int retainDays = 30) : 
             if (fileDate < cutoff)
             {
                 try { File.Delete(file); }
-                catch { /* ignore */ }
+                catch { /* 忽略 */ }
             }
         }
     }

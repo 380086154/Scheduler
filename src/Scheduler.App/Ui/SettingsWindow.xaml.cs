@@ -72,7 +72,7 @@ public partial class SettingsWindow : Window
         if (flushCurrent)
             FlushRuleAt(_ruleIndex);
         RuleList.ItemsSource = null;
-        RuleList.ItemsSource = _rules.Select(r => string.IsNullOrWhiteSpace(r.Title) ? r.Id : r.Title).ToList();
+        RuleList.ItemsSource = _rules.Select(x => $"{x.Time}  {(string.IsNullOrWhiteSpace(x.Title) ? x.Id : x.Title)}").ToList();
         if (_rules.Count == 0)
         {
             _ruleIndex = -1;

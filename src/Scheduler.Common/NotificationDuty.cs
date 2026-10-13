@@ -14,7 +14,7 @@ public sealed class NotificationDuty : IDisposable
     public static readonly string LockFilePath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments),
         "Scheduler",
-        "notifications.lock");
+        $"notifications{(DebugHelper.IsDebug ? ".debug" : string.Empty)}.lock");
 
     private readonly FileStream _lockStream;
     private bool _disposed;

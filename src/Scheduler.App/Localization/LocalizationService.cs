@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO;
 using System.Windows;
+using Scheduler.Common;
 
 namespace Scheduler.App.Localization;
 
@@ -58,6 +59,9 @@ public sealed class LocalizationService : ILocalizationService
             Source = new Uri($"pack://application:,,,/Resources/Strings.{language}.xaml", UriKind.Absolute)
         };
 
+        if (DebugHelper.IsDebug)
+            MarkDebugCopy(dictionary);
+
         var merged = System.Windows.Application.Current.Resources.MergedDictionaries;
         var previous = merged.FirstOrDefault(item => item.Contains(DictionaryIdKey));
         merged.Add(dictionary);
@@ -71,6 +75,21 @@ public sealed class LocalizationService : ILocalizationService
             Save(language);
 
         LanguageChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private static void MarkDebugCopy(ResourceDictionary dictionary)
+    {
+        foreach (var key in new[]
+        {
+            LocalizationKeys.AppName,
+            LocalizationKeys.WindowTitle,
+            LocalizationKeys.TrayTooltip,
+            LocalizationKeys.BalloonTitle
+        })
+        {
+            if (dictionary[key] is string text && !text.StartsWith("DEBUG ", StringComparison.Ordinal))
+                dictionary[key] = "DEBUG " + text;
+        }
     }
 
     private static string ReadSavedLanguage()

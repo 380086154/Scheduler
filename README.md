@@ -16,6 +16,31 @@ Windows desktop scheduler for workday reminders, office-presence tracking, and d
 
 输入统计只记次数，不记录按键内容。
 
+## App 和 Windows Service
+
+两边用同一套通知循环（节假日、在岗采样、到点发送）。同一台电脑上只有一个进程会发送。谁先启动，谁负责发送；另一个进程不再发送。
+
+| | `Scheduler.exe`（App） | `Scheduler.Service`（Windows 服务） |
+| --- | --- | --- |
+| 做什么 | 托盘、设置窗口，并在自己负责发送时跑通知 | 没有托盘。负责发送时跑同一套通知 |
+| 什么时候用 | 没有管理员权限。直接双击、开机启动，或用任务计划在登录时启动 | 需要没人登录也继续发送。安装服务需要管理员 |
+| 改配置 | 就是这个程序 | 仍然双击 `Scheduler.exe` 改。服务在跑时，App 只打开设置，不挂托盘，也不再发送 |
+
+不要同时用「开机时启动」和 Windows 服务。服务已经在跑时，登录再启动 App 会弹出设置窗口，而不是托盘。
+
+当前用户、不保存密码的登录任务（不需要管理员）：
+
+```powershell
+schtasks /Create /TN "Scheduler" /TR "\"C:\path\Scheduler.exe\"" /SC ONLOGON /RL LIMITED /F
+```
+
+安装服务（需要管理员）。服务读取当前登录用户的 `%AppData%\Scheduler\settings.json`；没人登录时，用最近保存过的那份配置。
+
+```powershell
+sc.exe create "Scheduler Service" binPath= "\"C:\path\Scheduler.Service.exe\"" start= auto
+sc.exe start "Scheduler Service"
+```
+
 ## 从源码运行
 
 需要 Windows 10/11 和 [.NET 10 SDK](https://dotnet.microsoft.com/download)。
@@ -55,15 +80,15 @@ powershell -File scripts/publish.ps1
 | `src/Scheduler.App` | WPF 主程序（托盘 + 设置 + Host） |
 | `src/Scheduler.Core` | 通知、节假日、在岗、输入统计 |
 | `src/Scheduler.Common` | 公共工具 |
-| `src/ARchGL.Platform.LockScreen` | **Legacy**，不再维护 |
-| `src/ARchGL.Platform.SessionService` | **Legacy**，不再维护 |
+| `src/Scheduler.LockScreen` | **Legacy**，不参与解决方案编译 |
+| `src/Scheduler.Service` | Windows 服务。与托盘共用通知循环，同一时间只有一边发送 |
 
-解决方案默认只编译现行三套项目。旧项目不进入 CI。
+解决方案会编译托盘程序和 `Scheduler.Service`。`Scheduler.LockScreen` 不进入默认编译。
 
 ## 构建
 
 ```powershell
-dotnet build src/Scheduler.App/Scheduler.App.csproj -c Release
+dotnet build src/Scheduler.sln -c Release
 ```
 
 ## 许可证

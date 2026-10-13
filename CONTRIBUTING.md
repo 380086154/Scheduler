@@ -22,6 +22,6 @@ Do not add or restore keystroke-content logging. Input activity must remain coun
 2. Keep the PR scoped: one problem or one feature.
 3. Update README when behavior or configuration changes.
 4. Do not commit `appsettings.Local.json`, logs, `bin/`, or `obj/`.
-5. Legacy projects under `src/ARchGL.Platform.*` are not the development target unless the change is explicitly about archiving them.
+5. `src/Scheduler.LockScreen` is legacy and is not built with the solution. `src/Scheduler.Service` runs the same notification loop as the tray app. Only one process may send; do not add a second scheduler.
 
 CI builds `Scheduler.App` on Windows. Please wait for the check to pass.

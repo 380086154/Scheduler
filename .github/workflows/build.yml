@@ -19,4 +19,4 @@ jobs:
           dotnet-version: "10.0.x"
 
       - name: Restore and build Scheduler
-        run: dotnet build src/Scheduler.App/Scheduler.App.csproj -c Release --nologo
+        run: dotnet build src/Scheduler.sln -c Release --nologo

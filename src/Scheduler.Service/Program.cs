@@ -1,34 +1,35 @@
-﻿using System;
-using System.IO;
-using System.ServiceProcess;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Scheduler.Common;
+using Scheduler.Core.Hosting;
+using Scheduler.Core.Logging;
 
-namespace ARchGL.Platform.SessionService
+const string ServiceName = "Scheduler Service";
+
+var ownsNotifications = NotificationDuty.TryAcquire(out var duty);
+try
 {
-    internal static class Program
+    var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
     {
-        /// <summary>
-        /// 应用程序的主入口点。
-        /// </summary>
-        static void Main()
-        {
-#if DEBUG
-            var service = new SessionService();
-            service.SendGogsCommitRecord();
-#endif
-            try
-            {
-                var servicesToRun = new ServiceBase[]
-                {
-                new SessionService()
-                };
-                ServiceBase.Run(servicesToRun);
-            }
-            catch (Exception ex)
-            {
-                var path = AppDomain.CurrentDomain.BaseDirectory;
+        Args = args,
+        ContentRootPath = AppContext.BaseDirectory
+    });
+    builder.Services.AddWindowsService(options => options.ServiceName = ServiceName);
+    builder.AddSchedulerRuntime(ownsNotifications);
+    builder.Logging.AddFile(builder.Configuration);
 
-                File.WriteAllText("C:\\service_crash.log", path + "\r\n" + ex.ToString());
-            }
-        }
-    }
+    using var host = builder.Build();
+    var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Scheduler.Service");
+    logger.LogInformation(
+        ownsNotifications
+            ? "{ServiceName} owns scheduled notifications."
+            : "{ServiceName} is idle. Another process already owns scheduled notifications.",
+        ServiceName);
+
+    await host.RunAsync();
+}
+finally
+{
+    duty?.Dispose();
 }

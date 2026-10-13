@@ -12,7 +12,7 @@ Windows desktop scheduler for workday reminders, office-presence tracking, and d
 4. 可用 **发送测试通知** 确认通道可用。
 5. 关掉设置窗口不会退出；要停止提醒，请右键托盘图标选择「退出」。
 
-用户配置保存在 `%AppData%\Scheduler\settings.json`，不要把这个文件发到网上。
+用户配置保存在 `data\notifications\settings.json`。从源码调试时写到仓库的 `doc\data\notifications\settings.json`，避免发布时把调试数据清掉。不要把这个文件发到网上。
 
 输入统计只记次数，不记录按键内容。
 
@@ -34,7 +34,7 @@ Windows desktop scheduler for workday reminders, office-presence tracking, and d
 schtasks /Create /TN "Scheduler" /TR "\"C:\path\Scheduler.exe\"" /SC ONLOGON /RL LIMITED /F
 ```
 
-安装服务（需要管理员）。服务读取当前登录用户的 `%AppData%\Scheduler\settings.json`；没人登录时，用最近保存过的那份配置。
+安装服务（需要管理员）。服务读取托盘正在使用的那一份配置，不另存。调试时是仓库 `doc\data\notifications\settings.json`；发布后是 `Scheduler.exe` 所在目录的 `data\notifications\settings.json`。服务与托盘放在同一目录，或保留「开机时启动」里的程序路径，服务才能找到这份文件。
 
 ```powershell
 sc.exe create "Scheduler Service" binPath= "\"C:\path\Scheduler.Service.exe\"" start= auto

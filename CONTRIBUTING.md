@@ -6,7 +6,7 @@ Thanks for taking a look at Scheduler. Small, focused pull requests are easier t
 
 - Windows + .NET 10 SDK
 - Optional: copy `src/Scheduler.App/appsettings.Local.json.example` to `appsettings.Local.json` for local overrides
-- User settings live in `%AppData%\Scheduler\settings.json` after first run
+- Debug user settings live in `doc/data/notifications/settings.json`. A published build stores them in `data/notifications/settings.json` next to the executable
 - Build / run:
 
 ```powershell

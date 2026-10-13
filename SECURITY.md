@@ -18,4 +18,4 @@ You should receive an acknowledgement within 7 days. After a fix is available, w
 
 ## Secrets
 
-Never commit webhook URLs, API keys, or `appsettings.Local.json`. User secrets belong in `%AppData%\Scheduler\settings.json` on the local machine. If a secret was committed, rotate it immediately — rewriting git history is not enough once the repo is public.
+Never commit webhook URLs, API keys, `appsettings.Local.json`, or `settings.json`. Debug settings live in `doc/data/notifications/settings.json` (gitignored). A published build stores them in `data/notifications/settings.json` next to the executable. If a secret was committed, rotate it immediately — rewriting git history is not enough once the repo is public.

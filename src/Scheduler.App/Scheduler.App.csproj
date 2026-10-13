@@ -29,10 +29,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="appsettings*.json">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
+		<Content Update="appsettings*.json" CopyToPublishDirectory="Never" />
 	</ItemGroup>
 
 </Project>

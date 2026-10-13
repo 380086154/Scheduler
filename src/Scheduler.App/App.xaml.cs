@@ -26,8 +26,6 @@ public partial class App : System.Windows.Application
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         base.OnStartup(e);
 
-        System.Windows.Forms.Application.SetHighDpiMode(System.Windows.Forms.HighDpiMode.PerMonitorV2);
-
         _instance = new AppInstance();
         if (!_instance.TryEnter())
         {

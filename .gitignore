@@ -5,6 +5,7 @@
 # Logs
 [Ll]ogs/
 healthchecksdb
+doc/data/
 
 # Generated files
 project.lock.json

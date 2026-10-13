@@ -46,9 +46,9 @@ internal static class AppIconFactory
         g.Clear(Color.Transparent);
         using var brush = new SolidBrush(Color.FromArgb(37, 99, 235));
         g.FillEllipse(brush, 1, 1, size - 2, size - 2);
-        using var font = new Font("Segoe UI", size * 0.45f, FontStyle.Bold, GraphicsUnit.Pixel);
+        using var font = new Font("Segoe UI", size * 0.75f, FontStyle.Bold, GraphicsUnit.Pixel);
         using var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-        g.DrawString("S", font, Brushes.White, new RectangleF(0, 1, size, size), sf);
+        g.DrawString("S", font, Brushes.White, new RectangleF(0, 0, size, size), sf);
         return bmp;
     }
 }

@@ -109,12 +109,11 @@ public partial class App : System.Windows.Application
             }
 
             _settings = new SettingsWindow(_host.Services, _localization!);
-            _settings.Closing += (_, args) =>
+            _settings.Closed += (_, _) =>
             {
-                args.Cancel = true;
-                _settings.Hide();
                 if (ReferenceEquals(MainWindow, _settings))
                     MainWindow = null;
+                _settings = null;
             };
             _settings.Show();
         }

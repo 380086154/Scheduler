@@ -202,6 +202,7 @@ public sealed class InputActivityService : IHostedService, IDisposable
     private void PersistUnlocked(bool force)
     {
         var utc = DateTime.UtcNow;
+        // 未到落盘间隔时计数只留在内存。正常退出会强制写入；若间隔较长且进程被直接结束，这段尚未落盘的次数会丢失。
         var interval = TimeSpan.FromMinutes(Math.Max(1, _options.PersistIntervalMinutes));
         if (!force && utc - _lastPersistUtc < interval) return;
 

@@ -7,10 +7,19 @@ namespace Scheduler.Common;
 /// </summary>
 public static class AppDataPaths
 {
-    private static readonly Lazy<string> RootLazy = new(ResolveRoot);
+    private static string? _root;
 
     /// <summary>data 根目录（已确保存在）</summary>
-    public static string Root => RootLazy.Value;
+    public static string Root => _root ??= ResolveRoot();
+
+    /// <summary>
+    /// 仅供 Windows 服务在启动时改用托盘程序的 data 目录。托盘进程不会调用。
+    /// </summary>
+    public static void UseRoot(string root)
+    {
+        Directory.CreateDirectory(root);
+        _root = root;
+    }
 
     /// <summary>
     /// 获取 data 下的子目录，并确保目录存在。

@@ -1,7 +1,7 @@
-using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
+using Scheduler.Common;
 using Scheduler.Core.InputActivity;
 using Scheduler.Core.Notifications;
 
@@ -18,9 +18,6 @@ public sealed class UserSettingsFile
 
 public static class UserSettingsStore
 {
-    private const string RelativePath = @"Scheduler\settings.json";
-    private static readonly Guid RoamingAppData = new("3EB685DB-65F9-4CF6-A03A-E3EF65729F3D");
-
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
@@ -78,88 +75,41 @@ public static class UserSettingsStore
     }
 
     /// <summary>
-    /// 交互式程序继续使用自己的 AppData 目录。
-    /// Session 0 服务从当前控制台用户读取同一文件，因此在程序里改的设置对服务同样生效。
+    /// 调试在 doc/data/notifications，发布在程序 data/notifications。
+    /// 新位置还没有文件时，从旧路径复制一次。
     /// </summary>
     private static string ResolveSettingsFile()
     {
-        var own = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), RelativePath);
-        if (Environment.UserInteractive)
-            return own;
+        var path = AppDataPaths.GetFile("notifications", "settings.json");
+        if (File.Exists(path))
+            return path;
 
-        var roaming = TryConsoleUserRoamingAppData();
-        if (!string.IsNullOrWhiteSpace(roaming))
-            return Path.Combine(roaming, RelativePath);
+        var legacy = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "Scheduler",
+            "settings.json");
+        if (TryCopy(legacy, path))
+            return path;
 
-        return DiscoverExistingSettings() ?? own;
+        TryCopy(AppDataPaths.GetFile("settings.json"), path);
+        return path;
     }
 
-    private static string? TryConsoleUserRoamingAppData()
+    private static bool TryCopy(string source, string destination)
     {
-        if (!OperatingSystem.IsWindows())
-            return null;
-
-        var sessionId = WTSGetActiveConsoleSessionId();
-        if (sessionId == 0xFFFFFFFF)
-            return null;
-        if (!WTSQueryUserToken(sessionId, out var token))
-            return null;
+        if (!File.Exists(source))
+            return false;
+        if (string.Equals(Path.GetFullPath(source), Path.GetFullPath(destination), StringComparison.OrdinalIgnoreCase))
+            return true;
 
         try
         {
-            var folder = RoamingAppData;
-            if (SHGetKnownFolderPath(ref folder, 0, token, out var path) != 0 || path == IntPtr.Zero)
-                return null;
-
-            try
-            {
-                return Marshal.PtrToStringUni(path);
-            }
-            finally
-            {
-                Marshal.FreeCoTaskMem(path);
-            }
+            File.Copy(source, destination);
+            return true;
         }
-        finally
+        catch
         {
-            CloseHandle(token);
+            return false;
         }
     }
-
-    private static string? DiscoverExistingSettings()
-    {
-        var root = Path.Combine(Path.GetPathRoot(Environment.SystemDirectory) ?? "C:\\", "Users");
-        if (!Directory.Exists(root))
-            return null;
-
-        string? best = null;
-        var bestTime = DateTime.MinValue;
-        foreach (var dir in Directory.EnumerateDirectories(root))
-        {
-            var file = Path.Combine(dir, "AppData", "Roaming", RelativePath);
-            if (!File.Exists(file))
-                continue;
-
-            var written = File.GetLastWriteTimeUtc(file);
-            if (written < bestTime)
-                continue;
-
-            bestTime = written;
-            best = file;
-        }
-
-        return best;
-    }
-
-    [DllImport("kernel32.dll")]
-    private static extern uint WTSGetActiveConsoleSessionId();
-
-    [DllImport("wtsapi32.dll", SetLastError = true)]
-    private static extern bool WTSQueryUserToken(uint sessionId, out IntPtr token);
-
-    [DllImport("shell32.dll")]
-    private static extern int SHGetKnownFolderPath(ref Guid rfid, uint flags, IntPtr token, out IntPtr path);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern bool CloseHandle(IntPtr handle);
 }

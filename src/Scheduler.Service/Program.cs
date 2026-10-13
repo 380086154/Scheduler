@@ -4,9 +4,11 @@ using Microsoft.Extensions.Logging;
 using Scheduler.Common;
 using Scheduler.Core.Hosting;
 using Scheduler.Core.Logging;
+using Scheduler.Service;
 
 const string ServiceName = "Scheduler Service";
 
+SharedDataRoot.Apply();
 var ownsNotifications = NotificationDuty.TryAcquire(out var duty);
 try
 {

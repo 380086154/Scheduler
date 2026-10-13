@@ -19,6 +19,9 @@ public partial class App : System.Windows.Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        // 设置窗口是普通表单，用 CPU 绘制即可。避免按本机显卡加载厂商驱动（Intel / AMD / NVIDIA 都一样）。
+        System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
+
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         base.OnStartup(e);

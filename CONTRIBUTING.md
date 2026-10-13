@@ -5,7 +5,8 @@ Thanks for taking a look at Scheduler. Small, focused pull requests are easier t
 ## Development
 
 - Windows + .NET 10 SDK
-- Copy `src/Scheduler.App/appsettings.Local.json.example` to `appsettings.Local.json` for local secrets
+- Optional: copy `src/Scheduler.App/appsettings.Local.json.example` to `appsettings.Local.json` for local overrides
+- User settings live in `%AppData%\Scheduler\settings.json` after first run
 - Build / run:
 
 ```powershell

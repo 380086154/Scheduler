@@ -8,6 +8,7 @@ namespace Scheduler.App.Ui;
 
 internal static class AppIconFactory
 {
+    private const int size = 35;
     private static Icon? _notifyIcon;
     private static BitmapImage? _windowIcon;
 
@@ -17,14 +18,14 @@ internal static class AppIconFactory
 
     private static Icon CreateNotifyIcon()
     {
-        using var bmp = CreateBitmap(32);
+        using var bmp = CreateBitmap(size);
         using var handleIcon = Icon.FromHandle(bmp.GetHicon());
         return (Icon)handleIcon.Clone();
     }
 
     private static BitmapImage CreateWindowIcon()
     {
-        using var bmp = CreateBitmap(32);
+        using var bmp = CreateBitmap(size);
         using var stream = new MemoryStream();
         bmp.Save(stream, ImageFormat.Png);
         stream.Position = 0;

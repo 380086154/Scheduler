@@ -1,8 +1,8 @@
 # Scheduler
 
-Windows desktop scheduler for workday reminders, office-presence tracking, and daily input **counts** (keyboard / mouse / wheel). It does **not** record key contents.
+给按中国工作日历上班的人用的任务栏提醒。设好时间和内容（打卡、周报、月末检查），到点发到你选的通知渠道，周末和法定节假日自动跳过。某条提醒也可以等今天在工位解锁满指定分钟后再发。另外可以顺带统计当天的键鼠操作次数，只记次数，不记录按键内容。
 
-面向国内办公场景的 Windows 托盘程序：按工作日发送提醒、统计今日在岗时长，以及键鼠操作次数。同一进程里包含后台调度和设置窗口。
+A tray app that reminds you on the Chinese work calendar. Set a time and a message—clock-in, weekly report, month-end checklist—and it posts through the channel you choose, skipping weekends and public holidays. A reminder can also wait until the PC has been unlocked at the desk for a set number of minutes. As a small extra, it can count that day's keyboard and mouse actions. Counts only: it never records what you typed.
 
 ## 普通用户怎么用
 
@@ -62,9 +62,9 @@ powershell -File scripts/publish.ps1
 ## 它做什么
 
 - 工作日 / 本周最后工作日 / 本月最后工作日提醒
-- 根据锁屏与远程桌面状态估算今日在岗时长
-- 统计今日键盘按下、鼠标点击、滚轮次数（可下班发摘要）
+- 某条提醒可要求今日在岗满若干分钟后再发（按锁屏和远程桌面估算）
 - 通知渠道：Microsoft Teams、企业微信（钉钉尚未发送）
+- 附带功能：统计今日键盘按下、鼠标点击、滚轮次数
 
 ## 隐私
 

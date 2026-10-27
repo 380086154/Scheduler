@@ -25,9 +25,8 @@ try
     var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Scheduler.Service");
     logger.LogInformation(
         ownsNotifications
-            ? "{ServiceName} owns scheduled notifications."
-            : "{ServiceName} is idle. Another process already owns scheduled notifications.",
-        ServiceName);
+            ? $"{ServiceName} owns scheduled notifications."
+            : $"{ServiceName} is idle. Another process already owns scheduled notifications.");
 
     await host.RunAsync();
 }

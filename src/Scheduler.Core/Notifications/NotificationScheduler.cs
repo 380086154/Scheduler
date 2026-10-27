@@ -40,11 +40,11 @@ public sealed class NotificationScheduler(
 
                 await notifier.NotifyAsync(title, message, cancellationToken);
                 stateStore.MarkSent(rule.Id, today);
-                logger.LogInformation("已发送通知 {RuleId}: {Title}", rule.Id, title);
+                logger.LogInformation($"已发送通知 {rule.Id}: {title}");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "发送通知失败 {RuleId}", rule.Id);
+                logger.LogError(ex, $"发送通知失败 {rule.Id}");
             }
         }
     }

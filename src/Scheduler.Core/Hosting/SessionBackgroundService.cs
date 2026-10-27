@@ -97,11 +97,6 @@ public class SessionBackgroundService(
     {
         var minutes = (int)presenceService.TodayAtOfficeDuration.TotalMinutes;
         logger.LogInformation(
-            "心跳 {Time:HH:mm:ss} 解锁={Unlocked} 远程={Remote} 在岗={AtOffice} 今日在岗={Minutes}分钟",
-            date,
-            presenceService.IsUnlocked,
-            presenceService.IsRemote,
-            presenceService.IsAtOfficeNow,
-            minutes);
+            $"心跳 {date:HH:mm:ss} 解锁={presenceService.IsUnlocked} 远程={presenceService.IsRemote} 在岗={presenceService.IsAtOfficeNow} 今日在岗={minutes}分钟");
     }
 }

@@ -19,7 +19,7 @@ public sealed class RoutingNotifier(
                 await SendWeComAsync(current.WeComWebhookUrl, title, message, token).ConfigureAwait(false);
                 break;
             case NotificationProvider.DingTalk:
-                logger.LogWarning("钉钉通知尚未实现，已跳过 {Title}", title);
+                logger.LogWarning($"钉钉通知尚未实现，已跳过 {title}");
                 break;
             default:
                 await SendTeamsAsync(current.TeamsWebhookUrl, title, message, token).ConfigureAwait(false);
@@ -31,7 +31,7 @@ public sealed class RoutingNotifier(
     {
         if (!IsHttpUrl(url))
         {
-            logger.LogWarning("Notifications:TeamsWebhookUrl 未配置，已跳过 {Title}", title);
+            logger.LogWarning($"Notifications:TeamsWebhookUrl 未配置，已跳过 {title}");
             return;
         }
 
@@ -55,7 +55,7 @@ public sealed class RoutingNotifier(
     {
         if (WeComWebhookNotifier.ExtractKey(url) is not { Length: > 0 } || !IsHttpUrl(url))
         {
-            logger.LogWarning("Notifications:WeComWebhookUrl 未配置或缺少 key，已跳过 {Title}", title);
+            logger.LogWarning($"Notifications:WeComWebhookUrl 未配置或缺少 key，已跳过 {title}");
             return;
         }
 

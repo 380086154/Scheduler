@@ -53,11 +53,7 @@ public partial class App : System.Windows.Application
             await _host.StartAsync();
 
             var logger = AppHost.CreateStartupLogger(_host);
-            logger.LogInformation(
-                "进程启动，PID={ProcessId}，日志目录={LogDir}，用户配置={Settings}",
-                Environment.ProcessId,
-                FileLoggingExtensions.DefaultLogDirectory,
-                UserSettingsStore.FilePath);
+            logger.LogInformation($"进程启动，PID={Environment.ProcessId}，日志目录={FileLoggingExtensions.DefaultLogDirectory}，用户配置={UserSettingsStore.FilePath}");
 
             if (!runNotifications || UserSettingsStore.WasSeededThisRun || e.Args.Contains("--settings", StringComparer.OrdinalIgnoreCase))
                 ShowSettings();

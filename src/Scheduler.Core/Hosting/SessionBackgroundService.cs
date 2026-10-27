@@ -28,14 +28,14 @@ public class SessionBackgroundService(
     {
         logger.LogInformation("SessionBackgroundService 已启动");
 
-        await holidayService.InitializeAsync();
+        await holidayService.InitializeAsync().ConfigureAwait(false);
 
         presenceService.Sample();
         LogHeartbeat(DateTime.Now);
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken).ConfigureAwait(false);
 
             var date = DateTime.Now;
 
@@ -45,7 +45,7 @@ public class SessionBackgroundService(
                 try
                 {
                     presenceService.Sample(date);
-                    await notificationScheduler.TickAsync(date, cancellationToken);
+                    await notificationScheduler.TickAsync(date, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -81,7 +81,7 @@ public class SessionBackgroundService(
 
             // 跨天执行
             if (day != 0 && day != date.Day)
-                await holidayService.InitializeAsync(true);
+                await holidayService.InitializeAsync(true).ConfigureAwait(false);
 
             day = date.Day;
         }
@@ -90,7 +90,7 @@ public class SessionBackgroundService(
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("SessionBackgroundService 正在停止");
-        await base.StopAsync(cancellationToken);
+        await base.StopAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private void LogHeartbeat(DateTime date)

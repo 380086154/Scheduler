@@ -50,7 +50,8 @@ public partial class App : System.Windows.Application
                 _tray.Show();
             }
 
-            await _host.StartAsync();
+            // 在线程池上启动，避免后台循环把延续绑回 WPF 界面线程。
+            await Task.Run(() => _host.StartAsync());
 
             var logger = AppHost.CreateStartupLogger(_host);
             logger.LogInformation($"进程启动，PID={Environment.ProcessId}，日志目录={FileLoggingExtensions.DefaultLogDirectory}，用户配置={UserSettingsStore.FilePath}");
@@ -75,25 +76,52 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        _tray?.Dispose();
-        _settings = null;
-
-        if (_host is not null)
+        try
         {
-            try
-            {
-                _host.StopAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
-                _host.Dispose();
-            }
-            catch
-            {
-                // 忽略关闭时的错误
-            }
+            _tray?.Dispose();
+            _settings = null;
+            StopHost();
+        }
+        finally
+        {
+            _instance?.Dispose();
+            _notificationDuty?.Dispose();
+            _instance = null;
+            _notificationDuty = null;
         }
 
-        _instance?.Dispose();
-        _notificationDuty?.Dispose();
         base.OnExit(e);
+    }
+
+    /// <summary>
+    /// 退出由界面线程发起。若在这条线程上直接等待 Host 停止，后台任务的延续排不回来，进程会停住，锁文件也一直被占着。
+    /// </summary>
+    private void StopHost()
+    {
+        var host = _host;
+        _host = null;
+        if (host is null) return;
+
+        try
+        {
+            Task.Run(async () =>
+            {
+                await host.StopAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+            }).GetAwaiter().GetResult();
+        }
+        catch
+        {
+            // 忽略关闭时的错误
+        }
+
+        try
+        {
+            host.Dispose();
+        }
+        catch
+        {
+            // 忽略关闭时的错误
+        }
     }
 
     internal void ShowSettings()

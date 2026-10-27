@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 namespace Scheduler.Core.Notifications;
 
 public sealed class NotificationScheduler(
-    IOptions<NotificationOptions> options,
+    IOptionsMonitor<NotificationOptions> options,
     HolidayService holidayService,
     SessionPresenceService presenceService,
     InputActivityService inputActivity,
@@ -15,15 +15,14 @@ public sealed class NotificationScheduler(
     INotifier notifier,
     ILogger<NotificationScheduler> logger)
 {
-    private readonly NotificationOptions _options = options.Value;
-
     public async Task TickAsync(DateTime now, CancellationToken cancellationToken = default)
     {
-        if (_options.Rules.Count == 0) return;
+        var rules = options.CurrentValue.Rules;
+        if (rules.Count == 0) return;
 
         var today = DateOnly.FromDateTime(now);
 
-        foreach (var rule in _options.Rules)
+        foreach (var rule in rules)
         {
             if (!rule.Enabled) continue;
             if (string.IsNullOrWhiteSpace(rule.Id)) continue;

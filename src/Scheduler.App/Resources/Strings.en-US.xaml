@@ -28,11 +28,13 @@
     <sys:String x:Key="InputStats">_Count today's keyboard and mouse actions (key contents are not recorded)</sys:String>
     <sys:String x:Key="ProviderTeams">Microsoft Teams</sys:String>
     <sys:String x:Key="ProviderWeCom">WeCom</sys:String>
+    <sys:String x:Key="ProviderDingTalk">DingTalk</sys:String>
     <sys:String x:Key="ScheduleDaily">Every workday</sys:String>
     <sys:String x:Key="ScheduleLastWeek">Last workday of the week</sys:String>
     <sys:String x:Key="ScheduleLastMonth">Last workday of the month</sys:String>
     <sys:String x:Key="WebhookHintWeCom">Full WeCom group robot URL. It must include the key parameter.</sys:String>
     <sys:String x:Key="WebhookHintTeams">Full Teams / Power Automate webhook URL.</sys:String>
+    <sys:String x:Key="WebhookHintDingTalk">Full DingTalk robot URL. It must include access_token. If signing is enabled, append &amp;secret=your-secret. The secret is only used to sign.</sys:String>
     <sys:String x:Key="TodayStatusLine">At office {0} min    Keyboard {1}    Clicks {2}    Wheel {3}</sys:String>
     <sys:String x:Key="StatusRemote">    (Remote)</sys:String>
     <sys:String x:Key="StatusUnlocked">    (Unlocked)</sys:String>

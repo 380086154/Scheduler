@@ -19,7 +19,7 @@ public sealed class RoutingNotifier(
                 await SendWeComAsync(current.WeComWebhookUrl, title, message, token).ConfigureAwait(false);
                 break;
             case NotificationProvider.DingTalk:
-                logger.LogWarning($"钉钉通知尚未实现，已跳过 {title}");
+                await SendDingTalkAsync(current.DingTalkWebhookUrl, title, message, token).ConfigureAwait(false);
                 break;
             default:
                 await SendTeamsAsync(current.TeamsWebhookUrl, title, message, token).ConfigureAwait(false);
@@ -72,17 +72,39 @@ public sealed class RoutingNotifier(
         await PostAsync(url!, json, token).ConfigureAwait(false);
     }
 
-    private async Task PostAsync(string url, string json, CancellationToken token)
+    private async Task SendDingTalkAsync(string? url, string title, string message, CancellationToken token)
+    {
+        if (!DingTalkWebhookNotifier.TryBuildRequestUrl(url, out var requestUrl))
+        {
+            logger.LogWarning($"Notifications:DingTalkWebhookUrl 未配置或缺少 access_token，已跳过 {title}");
+            return;
+        }
+
+        var content = NotificationText.Truncate(NotificationText.Body(title, message), 2000);
+        var json = $$"""
+            {
+              "msgtype": "text",
+              "text": {
+                "content": "{{NotificationText.JsonEncode(content)}}"
+              }
+            }
+            """;
+
+        var body = await PostAsync(requestUrl, json, token).ConfigureAwait(false);
+        DingTalkWebhookNotifier.EnsureAccepted(body);
+    }
+
+    private async Task<string> PostAsync(string url, string json, CancellationToken token)
     {
         var client = httpClientFactory.CreateClient("notifications");
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
         request.Content = new StringContent(json, Encoding.UTF8, "application/json");
         using var response = await client.SendAsync(request, token).ConfigureAwait(false);
+        var body = await response.Content.ReadAsStringAsync(token).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
-        {
-            var body = await response.Content.ReadAsStringAsync(token).ConfigureAwait(false);
             throw new HttpRequestException($"通知发送失败 {(int)response.StatusCode}：{body}");
-        }
+
+        return body;
     }
 
     private static bool IsHttpUrl(string? url) =>

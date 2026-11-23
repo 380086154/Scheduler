@@ -26,11 +26,13 @@ public static class LocalizationKeys
     public const string InputStats = nameof(InputStats);
     public const string ProviderTeams = nameof(ProviderTeams);
     public const string ProviderWeCom = nameof(ProviderWeCom);
+    public const string ProviderDingTalk = nameof(ProviderDingTalk);
     public const string ScheduleDaily = nameof(ScheduleDaily);
     public const string ScheduleLastWeek = nameof(ScheduleLastWeek);
     public const string ScheduleLastMonth = nameof(ScheduleLastMonth);
     public const string WebhookHintWeCom = nameof(WebhookHintWeCom);
     public const string WebhookHintTeams = nameof(WebhookHintTeams);
+    public const string WebhookHintDingTalk = nameof(WebhookHintDingTalk);
     public const string TodayStatusLine = nameof(TodayStatusLine);
     public const string StatusRemote = nameof(StatusRemote);
     public const string StatusUnlocked = nameof(StatusUnlocked);

@@ -28,11 +28,13 @@
     <sys:String x:Key="InputStats">统计今日键鼠次数（不记录按键内容）(_C)</sys:String>
     <sys:String x:Key="ProviderTeams">Microsoft Teams</sys:String>
     <sys:String x:Key="ProviderWeCom">企业微信</sys:String>
+    <sys:String x:Key="ProviderDingTalk">钉钉</sys:String>
     <sys:String x:Key="ScheduleDaily">每个工作日</sys:String>
     <sys:String x:Key="ScheduleLastWeek">本周最后工作日</sys:String>
     <sys:String x:Key="ScheduleLastMonth">本月最后工作日</sys:String>
     <sys:String x:Key="WebhookHintWeCom">企业微信群机器人完整地址，必须包含 key 参数。</sys:String>
     <sys:String x:Key="WebhookHintTeams">Teams / Power Automate 的完整 Webhook 地址。</sys:String>
+    <sys:String x:Key="WebhookHintDingTalk">钉钉自定义机器人完整地址，必须包含 access_token。开启加签时在地址后追加 &amp;secret=密钥，密钥只用于签名。</sys:String>
     <sys:String x:Key="TodayStatusLine">在岗 {0} 分钟    键盘 {1}    鼠标点击 {2}    滚轮 {3}</sys:String>
     <sys:String x:Key="StatusRemote">    （当前为远程）</sys:String>
     <sys:String x:Key="StatusUnlocked">    （已解锁）</sys:String>

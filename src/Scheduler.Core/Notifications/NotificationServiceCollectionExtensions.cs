@@ -11,6 +11,7 @@ public static class NotificationServiceCollectionExtensions
         services.Configure<NotificationOptions>(configuration.GetSection(NotificationOptions.SectionName));
         services.AddSingleton<NotificationStateStore>();
         services.AddSingleton<NotificationScheduler>();
+        services.AddSingleton<OutlookPresenceMonitor>();
         services.AddHttpClient("notifications", client =>
         {
             client.Timeout = TimeSpan.FromSeconds(15);

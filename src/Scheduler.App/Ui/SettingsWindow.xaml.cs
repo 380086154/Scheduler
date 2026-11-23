@@ -21,6 +21,10 @@ public partial class SettingsWindow : Window
     private int _ruleIndex = -1;
     private string? _statusKey;
     private object[] _statusArgs = [];
+    private NotificationProvider _webhookProvider = NotificationProvider.Teams;
+    private string _teamsUrl = "";
+    private string _weComUrl = "";
+    private string _dingTalkUrl = "";
 
     public SettingsWindow(IServiceProvider services, ILocalizationService localization)
     {
@@ -54,12 +58,16 @@ public partial class SettingsWindow : Window
         _rules.Clear();
         _rules.AddRange(settings.Notifications.Rules);
 
+        _teamsUrl = settings.Notifications.TeamsWebhookUrl ?? "";
+        _weComUrl = settings.Notifications.WeComWebhookUrl ?? "";
+        _dingTalkUrl = settings.Notifications.DingTalkWebhookUrl ?? "";
+        _webhookProvider = settings.Notifications.Provider;
+        WebhookBox.Text = WebhookFor(_webhookProvider);
+
         ProviderCombo.SelectedItem = ProviderCombo.Items
             .OfType<ProviderChoice>()
             .FirstOrDefault(x => x.Value == settings.Notifications.Provider)
             ?? ProviderCombo.Items.OfType<ProviderChoice>().FirstOrDefault();
-
-        WebhookBox.Text = CurrentWebhook(settings.Notifications);
         StartWithWindowsBox.IsChecked = settings.StartWithWindows;
         InputStatsBox.IsChecked = settings.InputActivity.Enabled;
 
@@ -168,15 +176,21 @@ public partial class SettingsWindow : Window
     private void ProviderCombo_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_suppressRuleEvents) return;
+        StoreWebhookText(_webhookProvider);
+        _webhookProvider = SelectedProvider;
+        WebhookBox.Text = WebhookFor(_webhookProvider);
         UpdateWebhookHint();
     }
 
     private void UpdateWebhookHint()
     {
-        WebhookHint.Text = _localization.GetString(
-            SelectedProvider == NotificationProvider.WeCom
-                ? LocalizationKeys.WebhookHintWeCom
-                : LocalizationKeys.WebhookHintTeams);
+        var key = SelectedProvider switch
+        {
+            NotificationProvider.WeCom => LocalizationKeys.WebhookHintWeCom,
+            NotificationProvider.DingTalk => LocalizationKeys.WebhookHintDingTalk,
+            _ => LocalizationKeys.WebhookHintTeams
+        };
+        WebhookHint.Text = _localization.GetString(key);
     }
 
     private void RefreshStatus_OnClick(object sender, RoutedEventArgs e) => RefreshTodayStatus();
@@ -287,17 +301,15 @@ public partial class SettingsWindow : Window
             }
         }
 
+        StoreWebhookText(SelectedProvider);
         var notifications = new NotificationOptions
         {
             Provider = SelectedProvider,
+            TeamsWebhookUrl = _teamsUrl,
+            WeComWebhookUrl = _weComUrl,
+            DingTalkWebhookUrl = _dingTalkUrl,
             Rules = _rules.Select(CloneRule).ToList()
         };
-
-        var webhook = WebhookBox.Text.Trim();
-        if (notifications.Provider == NotificationProvider.WeCom)
-            notifications.WeComWebhookUrl = webhook;
-        else
-            notifications.TeamsWebhookUrl = webhook;
 
         settings = new UserSettingsFile
         {
@@ -316,10 +328,29 @@ public partial class SettingsWindow : Window
             ? choice.Value
             : NotificationProvider.Teams;
 
-    private static string CurrentWebhook(NotificationOptions options) =>
-        options.Provider == NotificationProvider.WeCom
-            ? options.WeComWebhookUrl ?? ""
-            : options.TeamsWebhookUrl ?? "";
+    private void StoreWebhookText(NotificationProvider provider)
+    {
+        var text = WebhookBox.Text.Trim();
+        switch (provider)
+        {
+            case NotificationProvider.WeCom:
+                _weComUrl = text;
+                break;
+            case NotificationProvider.DingTalk:
+                _dingTalkUrl = text;
+                break;
+            default:
+                _teamsUrl = text;
+                break;
+        }
+    }
+
+    private string WebhookFor(NotificationProvider provider) => provider switch
+    {
+        NotificationProvider.WeCom => _weComUrl,
+        NotificationProvider.DingTalk => _dingTalkUrl,
+        _ => _teamsUrl
+    };
 
     private static NotificationRuleOptions CloneRule(NotificationRuleOptions rule) => new()
     {
@@ -396,7 +427,8 @@ public partial class SettingsWindow : Window
         ProviderCombo.ItemsSource = new[]
         {
             new ProviderChoice(NotificationProvider.Teams, _localization.GetString(LocalizationKeys.ProviderTeams)),
-            new ProviderChoice(NotificationProvider.WeCom, _localization.GetString(LocalizationKeys.ProviderWeCom))
+            new ProviderChoice(NotificationProvider.WeCom, _localization.GetString(LocalizationKeys.ProviderWeCom)),
+            new ProviderChoice(NotificationProvider.DingTalk, _localization.GetString(LocalizationKeys.ProviderDingTalk)),
         };
         ProviderCombo.SelectedItem = ProviderCombo.Items
             .OfType<ProviderChoice>()

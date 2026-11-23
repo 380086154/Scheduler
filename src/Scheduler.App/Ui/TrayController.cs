@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Scheduler.App.Localization;
 using Scheduler.Core.InputActivity;
@@ -23,6 +24,7 @@ internal sealed class TrayController : IDisposable
     private const uint NifIcon = 0x2;
     private const uint NifTip = 0x4;
     private const uint NifInfo = 0x10;
+    private const uint NifShowTip = 0x80;
 
     private const uint MfString = 0x0;
     private const uint MfSeparator = 0x800;
@@ -42,6 +44,7 @@ internal sealed class TrayController : IDisposable
     private readonly WndProcDelegate _wndProc;
     private readonly IntPtr _hwnd;
     private readonly IntPtr _menu;
+    private readonly DispatcherTimer _tooltipTimer;
     private bool _added;
     private string _tip = "Scheduler";
 
@@ -59,6 +62,9 @@ internal sealed class TrayController : IDisposable
         NativeMethods.AppendMenu(_menu, MfSeparator, 0, null);
         NativeMethods.AppendMenu(_menu, MfString, ExitId, "");
 
+        _tooltipTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
+        _tooltipTimer.Tick += (_, _) => UpdateTooltip();
+
         ApplyLanguage();
         _localization.LanguageChanged += OnLanguageChanged;
     }
@@ -66,18 +72,19 @@ internal sealed class TrayController : IDisposable
     public void Show()
     {
         UpdateTooltip();
-        var data = CreateData(NifMessage | NifIcon | NifTip);
+        var data = CreateData(NifMessage | NifIcon | NifTip | NifShowTip);
         if (!NativeMethods.Shell_NotifyIcon(NimAdd, ref data))
             throw new InvalidOperationException("Could not add the tray icon.");
 
         _added = true;
+        _tooltipTimer.Start();
     }
 
     public void ShowBalloon(string title, string text)
     {
         if (!_added) return;
 
-        var data = CreateData(NifInfo);
+        var data = CreateData(NifInfo | NifTip | NifShowTip);
         data.szInfoTitle = title;
         data.szInfo = text;
         data.uTimeoutOrVersion = 4000;
@@ -105,12 +112,14 @@ internal sealed class TrayController : IDisposable
 
         if (!_added) return;
 
-        var data = CreateData(NifTip);
+        // 只带 NIF_TIP 时，Windows 10/11 会继续显示旧提示。带上 NIF_SHOWTIP，并一起提交图标，悬停文案才会换掉。
+        var data = CreateData(NifIcon | NifTip | NifShowTip);
         NativeMethods.Shell_NotifyIcon(NimModify, ref data);
     }
 
     public void Dispose()
     {
+        _tooltipTimer.Stop();
         _localization.LanguageChanged -= OnLanguageChanged;
         if (_added)
         {
@@ -228,7 +237,7 @@ internal sealed class TrayController : IDisposable
     }
 
     private static string Truncate(string text) =>
-        text.Length <= 63 ? text : text[..63];
+        text.Length <= 127 ? text : text[..127];
 
     private delegate IntPtr WndProcDelegate(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
 

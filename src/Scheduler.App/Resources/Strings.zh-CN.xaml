@@ -17,6 +17,13 @@
     <sys:String x:Key="Add">新增(_A)</sys:String>
     <sys:String x:Key="Delete">删除(_D)</sys:String>
     <sys:String x:Key="Enabled">启用</sys:String>
+    <sys:String x:Key="RuleKind">类型</sys:String>
+    <sys:String x:Key="RuleKindScheduled">定时提醒</sys:String>
+    <sys:String x:Key="RuleKindProcessAbsent">进程未运行</sys:String>
+    <sys:String x:Key="ProcessNames">进程</sys:String>
+    <sys:String x:Key="ProcessNamesToolTip">进程名，多个用逗号分隔，不要带 .exe。新版 Outlook 填 olk，经典版填 OUTLOOK。</sys:String>
+    <sys:String x:Key="AbsentMinutes">未运行分钟</sys:String>
+    <sys:String x:Key="AbsentMinutesToolTip">屏幕解锁后，进程连续这么多分钟没在运行就提醒一次；仍然没运行则按同样间隔再提醒。是否发送仍看周期。</sys:String>
     <sys:String x:Key="Title">标题</sys:String>
     <sys:String x:Key="Time">时间</sys:String>
     <sys:String x:Key="TimeToolTip">格式 HH:mm，例如 17:50</sys:String>
@@ -48,7 +55,11 @@
     <sys:String x:Key="Saved">已保存。通知渠道立即生效；键鼠统计开关将在下次启动后生效。</sys:String>
     <sys:String x:Key="RuleTitleRequired">每条规则都需要标题。</sys:String>
     <sys:String x:Key="RuleTimeInvalid">规则「{0}」的时间格式应为 HH:mm。</sys:String>
+    <sys:String x:Key="RuleProcessRequired">规则「{0}」至少要填一个进程名。</sys:String>
+    <sys:String x:Key="RuleAbsentMinutesInvalid">规则「{0}」的未运行分钟数要大于 0。</sys:String>
     <sys:String x:Key="NewRuleTitle">新提醒</sys:String>
+    <sys:String x:Key="NewProcessRuleTitle">启动 Outlook</sys:String>
+    <sys:String x:Key="NewProcessRuleMessage">Outlook 已超过 30 分钟没有运行，请启动 Outlook。</sys:String>
     <sys:String x:Key="TraySettings">设置(&amp;S)</sys:String>
     <sys:String x:Key="TrayRefresh">刷新状态</sys:String>
     <sys:String x:Key="TrayExit">退出(&amp;X)</sys:String>

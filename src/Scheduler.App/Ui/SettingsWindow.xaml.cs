@@ -34,6 +34,7 @@ public partial class SettingsWindow : Window
         Icon = AppIconFactory.WindowIcon;
 
         ProviderCombo.DisplayMemberPath = nameof(ProviderChoice.Name);
+        RuleKind.DisplayMemberPath = nameof(KindChoice.Name);
         RuleSchedule.DisplayMemberPath = nameof(ScheduleChoice.Name);
         RebuildChoices();
 
@@ -80,7 +81,7 @@ public partial class SettingsWindow : Window
         if (flushCurrent)
             FlushRuleAt(_ruleIndex);
         RuleList.ItemsSource = null;
-        RuleList.ItemsSource = _rules.Select(x => $"{x.Time}  {(string.IsNullOrWhiteSpace(x.Title) ? x.Id : x.Title)}").ToList();
+        RuleList.ItemsSource = _rules.Select(FormatRuleListItem).ToList();
         if (_rules.Count == 0)
         {
             _ruleIndex = -1;
@@ -104,14 +105,21 @@ public partial class SettingsWindow : Window
 
         _suppressRuleEvents = true;
         RuleEnabled.IsChecked = rule.Enabled;
+        RuleKind.SelectedItem = RuleKind.Items
+            .OfType<KindChoice>()
+            .FirstOrDefault(x => x.Value == rule.Kind)
+            ?? RuleKind.Items.OfType<KindChoice>().FirstOrDefault();
         RuleTitle.Text = rule.Title;
         RuleTime.Text = rule.Time;
+        RuleProcess.Text = string.Join(", ", rule.ProcessNames);
+        RuleAbsentMinutes.Text = rule.AbsentMinutes.ToString();
         RuleSchedule.SelectedItem = RuleSchedule.Items
             .OfType<ScheduleChoice>()
             .FirstOrDefault(x => x.Value == rule.Schedule)
             ?? RuleSchedule.Items[0];
         RuleOfficeMinutes.Text = rule.RequireAtOfficeMinutes.ToString();
         RuleMessage.Text = rule.Message;
+        ApplyKindEditor(rule.Kind);
         _suppressRuleEvents = false;
     }
 
@@ -123,8 +131,13 @@ public partial class SettingsWindow : Window
         var rule = _rules[index];
 
         rule.Enabled = RuleEnabled.IsChecked == true;
+        rule.Kind = SelectedKind;
         rule.Title = RuleTitle.Text.Trim();
         rule.Time = RuleTime.Text.Trim();
+        rule.ProcessNames = ParseProcessNames(RuleProcess.Text).ToList();
+        if (!int.TryParse(RuleAbsentMinutes.Text.Trim(), out var absentMinutes) || absentMinutes < 0)
+            absentMinutes = 0;
+        rule.AbsentMinutes = absentMinutes;
         if (RuleSchedule.SelectedItem is ScheduleChoice schedule)
             rule.Schedule = schedule.Value;
         if (!int.TryParse(RuleOfficeMinutes.Text.Trim(), out var minutes) || minutes < 0)
@@ -293,6 +306,25 @@ public partial class SettingsWindow : Window
                 return false;
             }
 
+            if (rule.Kind == NotificationRuleKind.ProcessAbsent)
+            {
+                if (rule.ProcessNames.Count == 0)
+                {
+                    error = LocalizationKeys.RuleProcessRequired;
+                    errorArgs = [rule.Title];
+                    return false;
+                }
+
+                if (rule.AbsentMinutes <= 0)
+                {
+                    error = LocalizationKeys.RuleAbsentMinutesInvalid;
+                    errorArgs = [rule.Title];
+                    return false;
+                }
+
+                continue;
+            }
+
             if (!TimeOnly.TryParse(rule.Time, out _))
             {
                 error = LocalizationKeys.RuleTimeInvalid;
@@ -356,10 +388,13 @@ public partial class SettingsWindow : Window
     {
         Id = rule.Id,
         Enabled = rule.Enabled,
+        Kind = rule.Kind,
         Title = rule.Title,
         Message = rule.Message,
         Time = rule.Time,
         Schedule = rule.Schedule,
+        ProcessNames = rule.ProcessNames.ToList(),
+        AbsentMinutes = rule.AbsentMinutes,
         RequireAtOfficeMinutes = rule.RequireAtOfficeMinutes,
         SkewMinutes = rule.SkewMinutes
     };
@@ -371,6 +406,7 @@ public partial class SettingsWindow : Window
     {
         RebuildChoices();
         UpdateLanguageToggle();
+        RefreshRuleList(_ruleIndex);
         RefreshTodayStatus();
         HolidayPanel.ApplyLanguage();
         ShowCurrentStatus();
@@ -419,6 +455,7 @@ public partial class SettingsWindow : Window
     private void RebuildChoices()
     {
         var provider = SelectedProvider;
+        var kind = SelectedKind;
         var schedule = RuleSchedule.SelectedItem is ScheduleChoice current
             ? current.Value
             : NotificationSchedule.DailyWorkday;
@@ -434,6 +471,16 @@ public partial class SettingsWindow : Window
             .OfType<ProviderChoice>()
             .FirstOrDefault(x => x.Value == provider);
 
+        RuleKind.ItemsSource = new[]
+        {
+            new KindChoice(NotificationRuleKind.Scheduled, _localization.GetString(LocalizationKeys.RuleKindScheduled)),
+            new KindChoice(NotificationRuleKind.ProcessAbsent, _localization.GetString(LocalizationKeys.RuleKindProcessAbsent))
+        };
+        RuleKind.SelectedItem = RuleKind.Items
+            .OfType<KindChoice>()
+            .FirstOrDefault(x => x.Value == kind)
+            ?? RuleKind.Items[0];
+
         RuleSchedule.ItemsSource = new[]
         {
             new ScheduleChoice(NotificationSchedule.DailyWorkday, _localization.GetString(LocalizationKeys.ScheduleDaily)),
@@ -445,7 +492,65 @@ public partial class SettingsWindow : Window
             .FirstOrDefault(x => x.Value == schedule)
             ?? RuleSchedule.Items[0];
         _suppressRuleEvents = false;
+        ApplyKindEditor(SelectedKind);
         UpdateWebhookHint();
+    }
+
+    private void RuleKind_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressRuleEvents) return;
+        var kind = SelectedKind;
+        ApplyKindEditor(kind);
+        if (kind == NotificationRuleKind.ProcessAbsent)
+            PrefillProcessRule();
+    }
+
+    private void ApplyKindEditor(NotificationRuleKind kind)
+    {
+        var scheduled = kind == NotificationRuleKind.Scheduled;
+        SetRowVisible(RuleTimeLabel, RuleTime, scheduled);
+        SetRowVisible(RuleOfficeLabel, RuleOfficeMinutes, scheduled);
+        SetRowVisible(RuleProcessLabel, RuleProcess, !scheduled);
+        SetRowVisible(RuleAbsentLabel, RuleAbsentMinutes, !scheduled);
+    }
+
+    private static void SetRowVisible(UIElement label, UIElement input, bool visible)
+    {
+        var visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+        label.Visibility = visibility;
+        input.Visibility = visibility;
+    }
+
+    private void PrefillProcessRule()
+    {
+        if (string.IsNullOrWhiteSpace(RuleProcess.Text))
+            RuleProcess.Text = "olk, OUTLOOK";
+        if (!int.TryParse(RuleAbsentMinutes.Text.Trim(), out var minutes) || minutes <= 0)
+            RuleAbsentMinutes.Text = "30";
+
+        var genericTitle = _localization.GetString(LocalizationKeys.NewRuleTitle);
+        if (string.IsNullOrWhiteSpace(RuleTitle.Text) || RuleTitle.Text.Trim() == genericTitle)
+            RuleTitle.Text = _localization.GetString(LocalizationKeys.NewProcessRuleTitle);
+        if (string.IsNullOrWhiteSpace(RuleMessage.Text))
+            RuleMessage.Text = _localization.GetString(LocalizationKeys.NewProcessRuleMessage);
+    }
+
+    private string FormatRuleListItem(NotificationRuleOptions rule)
+    {
+        var title = string.IsNullOrWhiteSpace(rule.Title) ? rule.Id : rule.Title;
+        if (rule.Kind == NotificationRuleKind.ProcessAbsent)
+            return $"{_localization.GetString(LocalizationKeys.RuleKindProcessAbsent)}  {title}";
+        return $"{rule.Time}  {title}";
+    }
+
+    private NotificationRuleKind SelectedKind =>
+        RuleKind.SelectedItem is KindChoice choice
+            ? choice.Value
+            : NotificationRuleKind.Scheduled;
+
+    private static List<string> ParseProcessNames(string text)
+    {
+        return ProcessPresence.Normalize(text.Split([',', '，', ';', '；', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries)).ToList();
     }
 
     private void UpdateLanguageToggle()
@@ -469,5 +574,6 @@ public partial class SettingsWindow : Window
     }
 
     private sealed record ProviderChoice(NotificationProvider Value, string Name);
+    private sealed record KindChoice(NotificationRuleKind Value, string Name);
     private sealed record ScheduleChoice(NotificationSchedule Value, string Name);
 }

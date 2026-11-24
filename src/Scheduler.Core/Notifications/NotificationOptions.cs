@@ -25,6 +25,8 @@ public sealed class NotificationRuleOptions
     /// <summary>任务启用状态，true 启用</summary>
     public bool Enabled { get; set; } = true;
 
+    public NotificationRuleKind Kind { get; set; } = NotificationRuleKind.Scheduled;
+
     public string Title { get; set; } = "";
 
     public string Message { get; set; } = "";
@@ -33,6 +35,12 @@ public sealed class NotificationRuleOptions
     public string Time { get; set; } = "00:00";
 
     public NotificationSchedule Schedule { get; set; } = NotificationSchedule.DailyWorkday;
+
+    /// <summary>进程未运行规则要检查的进程名，不带 .exe。</summary>
+    public List<string> ProcessNames { get; set; } = [];
+
+    /// <summary>进程连续未运行达到该分钟数后提醒，并按同样间隔重复。</summary>
+    public int AbsentMinutes { get; set; } = 30;
 
     /// <summary>今日在公司累计解锁分钟数要求；0 表示不要求</summary>
     public int RequireAtOfficeMinutes { get; set; }

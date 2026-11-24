@@ -15,6 +15,13 @@ public static class LocalizationKeys
     public const string Add = nameof(Add);
     public const string Delete = nameof(Delete);
     public const string Enabled = nameof(Enabled);
+    public const string RuleKind = nameof(RuleKind);
+    public const string RuleKindScheduled = nameof(RuleKindScheduled);
+    public const string RuleKindProcessAbsent = nameof(RuleKindProcessAbsent);
+    public const string ProcessNames = nameof(ProcessNames);
+    public const string ProcessNamesToolTip = nameof(ProcessNamesToolTip);
+    public const string AbsentMinutes = nameof(AbsentMinutes);
+    public const string AbsentMinutesToolTip = nameof(AbsentMinutesToolTip);
     public const string Title = nameof(Title);
     public const string Time = nameof(Time);
     public const string TimeToolTip = nameof(TimeToolTip);
@@ -46,7 +53,11 @@ public static class LocalizationKeys
     public const string Saved = nameof(Saved);
     public const string RuleTitleRequired = nameof(RuleTitleRequired);
     public const string RuleTimeInvalid = nameof(RuleTimeInvalid);
+    public const string RuleProcessRequired = nameof(RuleProcessRequired);
+    public const string RuleAbsentMinutesInvalid = nameof(RuleAbsentMinutesInvalid);
     public const string NewRuleTitle = nameof(NewRuleTitle);
+    public const string NewProcessRuleTitle = nameof(NewProcessRuleTitle);
+    public const string NewProcessRuleMessage = nameof(NewProcessRuleMessage);
     public const string TraySettings = nameof(TraySettings);
     public const string TrayRefresh = nameof(TrayRefresh);
     public const string TrayExit = nameof(TrayExit);

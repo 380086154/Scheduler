@@ -17,6 +17,13 @@
     <sys:String x:Key="Add">_Add</sys:String>
     <sys:String x:Key="Delete">_Delete</sys:String>
     <sys:String x:Key="Enabled">Enabled</sys:String>
+    <sys:String x:Key="RuleKind">Type</sys:String>
+    <sys:String x:Key="RuleKindScheduled">Scheduled</sys:String>
+    <sys:String x:Key="RuleKindProcessAbsent">Process not running</sys:String>
+    <sys:String x:Key="ProcessNames">Processes</sys:String>
+    <sys:String x:Key="ProcessNamesToolTip">Process names separated by commas, without .exe. New Outlook is olk. Classic Outlook is OUTLOOK.</sys:String>
+    <sys:String x:Key="AbsentMinutes">Absent minutes</sys:String>
+    <sys:String x:Key="AbsentMinutesToolTip">After the screen is unlocked, send once when the process has been missing for this many minutes, then repeat at the same interval. The schedule still decides whether to send.</sys:String>
     <sys:String x:Key="Title">Title</sys:String>
     <sys:String x:Key="Time">Time</sys:String>
     <sys:String x:Key="TimeToolTip">Format HH:mm, for example 17:50</sys:String>
@@ -48,7 +55,11 @@
     <sys:String x:Key="Saved">Saved. The notification channel applies immediately. Input counting applies after the next start.</sys:String>
     <sys:String x:Key="RuleTitleRequired">Every rule needs a title.</sys:String>
     <sys:String x:Key="RuleTimeInvalid">Rule "{0}" time must be HH:mm.</sys:String>
+    <sys:String x:Key="RuleProcessRequired">Rule "{0}" needs at least one process name.</sys:String>
+    <sys:String x:Key="RuleAbsentMinutesInvalid">Rule "{0}" absent minutes must be greater than 0.</sys:String>
     <sys:String x:Key="NewRuleTitle">New reminder</sys:String>
+    <sys:String x:Key="NewProcessRuleTitle">Start Outlook</sys:String>
+    <sys:String x:Key="NewProcessRuleMessage">Outlook has not been running for 30 minutes. Please start Outlook.</sys:String>
     <sys:String x:Key="TraySettings">Settings(&amp;S)</sys:String>
     <sys:String x:Key="TrayRefresh">Refresh Status</sys:String>
     <sys:String x:Key="TrayExit">Exit(&amp;X)</sys:String>

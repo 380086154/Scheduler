@@ -14,7 +14,6 @@ public class SessionBackgroundService(
     HolidayService holidayService,
     SessionPresenceService presenceService,
     NotificationScheduler notificationScheduler,
-    OutlookPresenceMonitor outlookPresence,
     ILogger<SessionBackgroundService> logger) : BackgroundService
 {
     private static int day;
@@ -47,7 +46,6 @@ public class SessionBackgroundService(
                 {
                     presenceService.Sample(date);
                     await notificationScheduler.TickAsync(date, cancellationToken).ConfigureAwait(false);
-                    await outlookPresence.TickAsync(date, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
